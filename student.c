@@ -93,3 +93,18 @@ void delete_student(list_student *list, char *cne_to_delete) {
     free(current);
     printf("Etudiant supprime avec succes.\n");
 }
+
+void save_database(list_student *list, char *filename) {
+    FILE *pFile = fopen(filename, "wb");
+    student *suivant = list->tete;
+    if (pFile == NULL) {
+        printf("Impossible d'ouverture a ce fichier %s\n", filename);
+        exit(1);
+    }
+
+    while (suivant != NULL) {
+        fwrite(suivant, sizeof(student),1, pFile);
+        suivant = suivant->next;
+    }
+    fclose(pFile);
+}

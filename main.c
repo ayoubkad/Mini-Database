@@ -4,16 +4,15 @@
 #include "student.h" // تأكد أن هذا الملف موجود
 
 int main() {
-    // 1. إنشاء القائمة
     list_student *my_db = creat_list_student();
     int choice = 0;
-    char cne_buffer[20]; // لتخزين الـ CNE الذي يريد المستخدم حذفه
+    char cne_buffer[20];
 
     do {
         printf("\n=== MINI DATABASE MENU ===\n");
         printf("1. Ajouter un etudiant (Add)\n");
         printf("2. Afficher tout (Display)\n");
-        printf("3. Supprimer un etudiant (Delete)\n"); // الخيار الجديد
+        printf("3. Supprimer un etudiant (Delete)\n");
         printf("4. Quitter (Exit)\n");
         printf("Votre choix: ");
         scanf("%d", &choice);
@@ -42,6 +41,7 @@ int main() {
                 delete_student(my_db, cne_buffer);
                 break;
             case 4:
+                save_database(my_db, "my_data.db");
                 printf("Au revoir!\n");
                 break;
             default:
@@ -50,6 +50,5 @@ int main() {
 
     } while (choice != 4);
 
-    // تنظيف الذاكرة قبل الخروج (سنتعلم هذا لاحقاً، حالياً اتركه)
     return 0;
 }

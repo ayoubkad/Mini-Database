@@ -21,3 +21,4 @@ student *creat_student(); // pour cree un etudiant.
 void add_student(list_student *list, student *new_student);
 void display_all_student(list_student *list_student);
 void delete_student(list_student *list,char *cne_to_delete);
+void save_database(list_student *list, char *filename);
