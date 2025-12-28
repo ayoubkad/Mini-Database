@@ -1,19 +1,29 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "student.h" // تأكد أن هذا الملف موجود
+#include "student.h"
 
+
+/**
+ * @brief Point d'entrée principal du programme.
+ * 
+ * Initialise la base de données, charge les données existantes
+ * et affiche un menu interactif pour gérer les étudiants.
+ * 
+ * @return 0 si le programme s'exécute correctement.
+ */
 int main() {
     list_student *my_db = creat_list_student();
+
+    load_database(my_db, "my_data.db");
+
     int choice = 0;
     char cne_buffer[20];
 
     do {
         printf("\n=== MINI DATABASE MENU ===\n");
-        printf("1. Ajouter un etudiant (Add)\n");
-        printf("2. Afficher tout (Display)\n");
-        printf("3. Supprimer un etudiant (Delete)\n");
-        printf("4. Quitter (Exit)\n");
+        printf("1. Ajouter un etudiant\n");
+        printf("2. Afficher tout\n");
+        printf("3. Supprimer un etudiant\n");
+        printf("4. Sauvegarder et Quitter\n");
         printf("Votre choix: ");
         scanf("%d", &choice);
 
@@ -28,7 +38,6 @@ int main() {
                 scanf("%d", &s->age);
                 printf("Entrez CNE: ");
                 scanf("%s", s->CNE);
-
                 add_student(my_db, s);
                 break;
             }
@@ -42,7 +51,7 @@ int main() {
                 break;
             case 4:
                 save_database(my_db, "my_data.db");
-                printf("Au revoir!\n");
+                printf("Donnees sauvegardees. Au revoir!\n");
                 break;
             default:
                 printf("Choix invalide!\n");
