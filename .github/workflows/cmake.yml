@@ -1,0 +1,28 @@
+name: Build and Test Mini-Database
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      # يقوم بإنشاء ملفات البناء في مجلد build
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      # يقوم بتجميع المشروع (Compiling)
+      run: cmake --build ${{github.workspace}}/build --config Release
+
+    - name: Run Test
+      # يحاول تشغيل الاختبارات إذا كانت موجودة
+      # ملاحظة: هذا سيعمل فقط إذا كان Test_Student جاهزاً
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C Release --output-on-failure
