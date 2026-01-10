@@ -30,7 +30,9 @@ student *creat_student() {
     if (s == NULL) {
         exit(1);
     }
-    s->age = 0;
+    s->date_naissance.jour = 0;
+    s->date_naissance.mois = 0;
+    s->date_naissance.annee = 0;
     s->next = NULL;
     strcpy(s->CNE, "\0");
     strcpy(s->nom, "\0");
@@ -69,7 +71,10 @@ void display_all_student(list_student *list_student) {
         printf("Nom : %s\n", courent->nom);
         printf("Prenom : %s\n", courent->prenom);
         printf("CNE : %s\n", courent->CNE);
-        printf("Age : %d\n", courent->age);
+        printf("Date de naissance : %d/%d/%d\n", courent->date_naissance.jour,
+               courent->date_naissance.mois, courent->date_naissance.annee);
+        printf("Filiere : %s\n", courent->filiere);
+        printf("Moyenne : %.2f\n", courent->moyenne);
         compte++;
         courent = courent->next;
     }
@@ -103,7 +108,7 @@ void delete_student(list_student *list, char *cne_to_delete) {
         }
 
         free(temp);
-        printf("Etudiant supprime avec succes (Head).\n");
+        printf("Etudiant supprime avec succes.\n");
         return;
     }
 
@@ -131,36 +136,100 @@ void delete_student(list_student *list, char *cne_to_delete) {
 /**
  * @brief Sauvegarde la liste des étudiants dans un fichier binaire.
  * 
- * Parcourt la liste et écrit chaque structure student dans le fichier spécifié.
- * 
+ * MÉTHODE DE SÉRIALISATION :
+ * Cette fonction utilise la sérialisation binaire pour persister les données.
+ * Elle convertit les structures student de la mémoire en un flux d'octets
+ * qui peut être stocké sur le disque et rechargé ultérieurement.
+ *
+ * PROCESSUS :
+ * 1. Ouverture du fichier en mode écriture binaire ("wb")
+ * 2. Pour chaque étudiant de la liste chaînée :
+ *    - Copie des données dans une structure buffer (student_data)
+ *    - Exclusion du pointeur 'next' pour éviter la corruption de données
+ *    - Écriture de la structure complète en un seul bloc binaire
+ * 3. Fermeture du fichier après l'écriture de tous les étudiants
+ *
+ * AVANTAGES :
+ * - Rapidité d'écriture/lecture (pas de conversion texte)
+ * - Taille de fichier réduite
+ * - Préservation exacte des types de données (float, int, etc.)
+ *
+ * INCONVÉNIENTS :
+ * - Non portable entre différentes architectures
+ * - Non lisible par un éditeur de texte
+ *
  * @param list Pointeur vers la liste d'étudiants à sauvegarder.
  * @param filename Nom du fichier de destination.
  */
 void save_database(list_student *list, char *filename) {
+    // Ouvrir le fichier en mode écriture binaire ("wb" = write binary)
     FILE *pFile = fopen(filename, "wb");
-    student *suivant = list->tete;
+    student *cursor = list->tete;
+
     if (pFile == NULL) {
         printf("Impossible d'ouverture a ce fichier %s\n", filename);
         exit(1);
     }
 
-    while (suivant != NULL) {
-        fwrite(suivant, sizeof(student), 1, pFile);
-        suivant = suivant->next;
+    // Buffer temporaire de type student_data (sans le pointeur 'next')
+    // Cela évite d'écrire les adresses mémoire qui ne seraient pas valides après rechargement
+    student_data buffer;
+
+    // Parcourir toute la liste chaînée
+    while (cursor != NULL) {
+        // Copier les données de l'étudiant actuel dans le buffer
+        strcpy(buffer.nom, cursor->nom);
+        strcpy(buffer.prenom, cursor->prenom);
+        strcpy(buffer.CNE, cursor->CNE);
+        strcpy(buffer.filiere, cursor->filiere);
+        buffer.moyenne = cursor->moyenne;
+        buffer.date_naissance.jour = cursor->date_naissance.jour;
+        buffer.date_naissance.mois = cursor->date_naissance.mois;
+        buffer.date_naissance.annee = cursor->date_naissance.annee;
+
+        // Écrire la structure complète dans le fichier en un seul bloc
+        // fwrite(&buffer, taille_d'un_bloc, nombre_de_blocs, fichier)
+        fwrite(&buffer, sizeof(student_data), 1, pFile);
+
+        // Passer à l'étudiant suivant dans la liste
+        cursor = cursor->next;
     }
+
     fclose(pFile);
+    printf("Base de donnees sauvegardee avec succes.\n");
 }
 
 /**
  * @brief Charge tous les étudiants depuis un fichier binaire.
  * 
- * Lit les structures student depuis le fichier et les ajoute à la liste.
- * 
+ * MÉTHODE DE DÉSÉRIALISATION :
+ * Cette fonction effectue l'opération inverse de save_database.
+ * Elle lit le flux d'octets depuis le fichier et reconstruit les structures
+ * student en mémoire, recréant ainsi la liste chaînée originale.
+ *
+ * PROCESSUS :
+ * 1. Ouverture du fichier en mode lecture binaire ("rb")
+ * 2. Lecture séquentielle des structures student stockées :
+ *    - fread() lit sizeof(student) octets à chaque itération
+ *    - Chaque lecture crée un nouvel étudiant en mémoire
+ *    - Reconstruction de la liste chaînée avec add_student()
+ * 3. Arrêt automatique quand fread() retourne 0 (fin de fichier)
+ * 4. Fermeture du fichier
+ *
+ * IMPORTANT :
+ * - La liste doit être initialisée avant l'appel (via creat_list_student())
+ * - Les pointeurs 'next' sont reconstruits lors de l'ajout à la liste
+ * - L'ordre des étudiants est préservé (même ordre qu'à la sauvegarde)
+ *
+ * GESTION DES ERREURS :
+ * - Vérifie l'existence du fichier avant de lire
+ * - Retourne sans crash si le fichier n'existe pas
+ *
  * @param list Pointeur vers la liste d'étudiants (doit être initialisée).
  * @param filename Nom du fichier source.
  */
 void load_database(list_student *list, char *filename) {
-    // Ouvrir le fichier en mode lecture binaire
+    // Ouvrir le fichier en mode lecture binaire ("rb" = read binary)
     FILE *pFile = fopen(filename, "rb");
 
     if (pFile == NULL) {
@@ -168,17 +237,119 @@ void load_database(list_student *list, char *filename) {
         return;
     }
 
-    student temp; // Structure temporaire pour la lecture
+    // Structure temporaire pour lire chaque étudiant depuis le fichier
+    student temp;
 
-    // Lire chaque étudiant du fichier et l'ajouter à la liste
+    // Lire chaque étudiant du fichier jusqu'à la fin (EOF)
+    // fread retourne 1 si la lecture réussit, 0 si on atteint la fin du fichier
     while (fread(&temp, sizeof(student), 1, pFile) == 1) {
-        // Allouer de la mémoire pour le nouvel étudiant
+        // Allouer dynamiquement de la mémoire pour le nouvel étudiant
+        // Ceci crée un nouveau nœud dans la liste chaînée
         student *new_student = malloc(sizeof(student));
-        *new_student = temp; // Copier les données
-        new_student->next = NULL; // Réinitialiser le pointeur next
-        add_student(list, new_student); // Ajouter à la liste
+
+        // Copier toutes les données lues depuis le fichier vers le nouvel étudiant
+        *new_student = temp;
+
+        // Réinitialiser le pointeur next (il sera défini correctement par add_student)
+        // Important : le pointeur 'next' du fichier ne serait pas valide ici
+        new_student->next = NULL;
+
+        // Ajouter l'étudiant à la fin de la liste chaînée
+        // Cela reconstruit la structure de liste originale
+        add_student(list, new_student);
     }
 
-    fclose(pFile); // Fermer le fichier
+    fclose(pFile); // Fermer le fichier après la lecture complète
     printf("Donnees chargees avec succes !\n");
+}
+
+/**
+ * @brief Modifie les informations d'un étudiant identifié par son CNE.
+ *
+ * Recherche un étudiant dans la liste en utilisant son CNE et permet
+ * de modifier l'un de ses attributs (nom, prénom, date de naissance,
+ * filière ou moyenne) selon le choix de l'utilisateur.
+ *
+ * @param list Pointeur vers la liste d'étudiants.
+ * @param cne_to_modify CNE de l'étudiant à modifier.
+ */
+void modify_student(list_student *list, const char *cne_to_modify) {
+    // Initialiser le curseur au début de la liste
+    student *cursor = list->tete;
+    int found = 0;
+
+    // Parcourir la liste pour trouver l'étudiant avec le CNE correspondant
+    while (cursor != NULL) {
+        if (strcmp(cursor->CNE, cne_to_modify) == 0) {
+            found = 1;
+            int choice;
+
+            // Afficher le menu des options de modification
+            printf("Que voulez-vous changer?\n");
+            printf("1. Nom\n");
+            printf("2. Prenom\n");
+            printf("3. Date\n");
+            printf("4. Filiere\n");
+            printf("5. Moyenne\n");
+            printf("Votre choix: ");
+            scanf("%d", &choice);
+
+            // Traiter le choix de l'utilisateur
+            switch (choice) {
+                case 1: {
+                    // Modifier le nom
+                    char new_nom[20];
+                    printf("entrer nouvelle Nom : ");
+                    scanf("%s", new_nom); // Note: fgets() serait plus sûr pour les noms composés comme "EL Amrani"
+                    strcpy(cursor->nom, new_nom);
+                    break;
+                }
+                case 2: {
+                    // Modifier le prénom
+                    char new_prenom[20];
+                    printf("entrer nouvelle Prenom : ");
+                    scanf("%s", new_prenom);
+                    strcpy(cursor->prenom, new_prenom);
+                    break;
+                }
+                case 3: {
+                    // Modifier la date de naissance
+                    Date new_date;
+                    printf("entrer nouvelle Date comme (1 6 2005) : ");
+                    scanf("%d%d%d", &new_date.jour, &new_date.mois, &new_date.annee);
+                    cursor->date_naissance.jour = new_date.jour;
+                    cursor->date_naissance.mois = new_date.mois;
+                    cursor->date_naissance.annee = new_date.annee;
+                    break;
+                }
+                case 4: {
+                    // Modifier la filière
+                    char new_filiere[30];
+                    printf("entrer nouvelle Filiere : ");
+                    scanf("%s", new_filiere);
+                    strcpy(cursor->filiere, new_filiere);
+                    break;
+                }
+                case 5: {
+                    // Modifier la moyenne
+                    float new_moyenne;
+                    printf("Entrer nouvelle Moyenne : ");
+                    scanf("%f", &new_moyenne);
+                    cursor->moyenne = new_moyenne;
+                    break;
+                }
+                default:
+                    printf("Choix invalide!\n");
+            }
+            printf("Modification reussie!\n");
+            return;
+        }
+        // Passer à l'étudiant suivant
+        cursor = cursor->next;
+    }
+
+    // Si l'étudiant n'a pas été trouvé
+    if (found == 0) {
+        printf("Erreur: Aucun etudiant trouve avec le CNE %s\n", cne_to_modify);
+    }
 }

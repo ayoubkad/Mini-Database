@@ -14,15 +14,15 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Configure CMake
-      # يقوم بإنشاء ملفات البناء في مجلد build
+      # Crée les fichiers de build dans le dossier build
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
-      # يقوم بتجميع المشروع (Compiling)
+      # Compile le projet
       run: cmake --build ${{github.workspace}}/build --config Release
 
     - name: Run Test
-      # يحاول تشغيل الاختبارات إذا كانت موجودة
-      # ملاحظة: هذا سيعمل فقط إذا كان Test_Student جاهزاً
+      # Tente d'exécuter les tests s'ils existent
+      # Note: Cela ne fonctionnera que si Test_Student est prêt
       working-directory: ${{github.workspace}}/build
       run: ctest -C Release --output-on-failure
