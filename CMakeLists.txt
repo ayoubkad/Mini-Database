@@ -12,6 +12,7 @@ add_executable(Mini_Database
 
 # Executable pour les tests
 add_executable(Test_Student
+        test_student.c
         student.c
         student.h)
 
