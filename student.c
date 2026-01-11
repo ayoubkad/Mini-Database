@@ -276,12 +276,10 @@ void load_database(list_student *list, char *filename) {
 void modify_student(list_student *list, const char *cne_to_modify) {
     // Initialiser le curseur au début de la liste
     student *cursor = list->tete;
-    int found = 0;
 
     // Parcourir la liste pour trouver l'étudiant avec le CNE correspondant
     while (cursor != NULL) {
         if (strcmp(cursor->CNE, cne_to_modify) == 0) {
-            found = 1;
             int choice;
 
             // Afficher le menu des options de modification
@@ -349,7 +347,58 @@ void modify_student(list_student *list, const char *cne_to_modify) {
     }
 
     // Si l'étudiant n'a pas été trouvé
-    if (found == 0) {
-        printf("Erreur: Aucun etudiant trouve avec le CNE %s\n", cne_to_modify);
-    }
+    printf("Erreur: Aucun etudiant trouve avec le CNE %s\n", cne_to_modify);
 }
+
+void search_student_by_cne(list_student *list, char *cne) {
+    student *courent = list->tete;
+    while (courent != NULL) {
+        if (strcmp(courent->CNE, cne) == 0) {
+            printf("\n -------l'information d'etudiant  -------  \n");
+            printf("Nom : %s\n", courent->nom);
+            printf("Prenom : %s\n", courent->prenom);
+            printf("CNE : %s\n", courent->CNE);
+            printf("Date de naissance : %d/%d/%d\n", courent->date_naissance.jour,
+                   courent->date_naissance.mois, courent->date_naissance.annee);
+            printf("Filiere : %s\n", courent->filiere);
+            printf("Moyenne : %.2f\n", courent->moyenne);
+            return;
+        }
+        courent = courent->next;
+    }
+    printf("n'est existe aucun etudiant de CNE : %s dans la base de donnees", cne);
+}
+
+void delete_all_students(list_student *list) {
+    if (list == NULL || list->tete == NULL) {
+        printf("la base de donnee est vide!!!");
+        return;
+    }
+    student *courent = list->tete;
+    while (courent != NULL) {
+        student *temp = courent;
+        courent = courent->next;
+        free(temp);
+    }
+    list->tete = NULL;
+    list->queues = NULL;
+
+    printf("la base de donnee vide avec success");
+}
+
+student *med(list_student *list) {
+    if (list == NULL || list->tete == NULL) {
+        printf("la base de donnee est vide!!!");
+        return NULL;
+    }
+    student *slow = list->tete;
+    student *fast = list->tete->next;
+    while (fast != NULL && fast->next != NULL) {
+        fast = fast->next->next;
+        slow = slow->next;
+    }
+    return slow;
+}
+
+// void sort_students_by_grade(list_student *list) {
+// }

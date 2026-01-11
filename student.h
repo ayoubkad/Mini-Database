@@ -39,5 +39,8 @@ void display_all_student(list_student *list_student); // Affiche les information
 void delete_student(list_student *list, char *cne_to_delete); // Supprime un étudiant de la liste en utilisant son CNE.
 void save_database(list_student *list, char *filename); // Sauvegarde la liste des étudiants dans un fichier.
 void load_database(list_student *list, char *filename); // Charge la liste des étudiants à partir d'un fichier.
-// void display_student(list_student *list_student, char cne);
+void search_student_by_cne(list_student *list, char *cne);
+void delete_all_students(list_student *list);
 void modify_student(list_student *list, const char *cne_to_modify);
+// void sort_students_by_grade(list_student *list);
+student *med(list_student *list);
