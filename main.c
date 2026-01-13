@@ -23,8 +23,11 @@ int main() {
         printf("1. Ajouter un etudiant\n");
         printf("2. Afficher tout\n");
         printf("3. Supprimer un etudiant\n");
-        printf("4. modifier les donnees d'etudiant\n");
-        printf("5. Sauvegarder et Quitter\n");
+        printf("4. Modifier les donnees d'etudiant\n");
+        printf("5. Rechercher un etudiant par CNE\n");
+        printf("6. Trier les etudiants par moyenne\n");
+        printf("7. Supprimer tous les etudiants\n");
+        printf("8. Sauvegarder et Quitter\n");
         printf("Votre choix: ");
         scanf("%d", &choice);
 
@@ -60,13 +63,32 @@ int main() {
                 modify_student(my_db, cne_buffer);
                 break;
             case 5:
+                printf("\nEntrez le CNE de l'etudiant a rechercher : ");
+                scanf("%s", cne_buffer);
+                search_student_by_cne(my_db, cne_buffer);
+                break;
+            case 6:
+                sort_students_by_grade(my_db);
+                break;
+            case 7:
+                printf("\nATTENTION: Cette action supprimera tous les etudiants!\n");
+                printf("Etes-vous sur? (1=Oui, 0=Non): ");
+                int confirm;
+                scanf("%d", &confirm);
+                if (confirm == 1) {
+                    delete_all_students(my_db);
+                } else {
+                    printf("Operation annulee.\n");
+                }
+                break;
+            case 8:
                 save_database(my_db, "my_data.db");
                 printf("Donnees sauvegardees. Au revoir!\n");
                 break;
         default:
             printf("Choix invalide!\n");
         }
-    } while (choice != 5);
+    } while (choice != 8);
 
     return 0;
 }

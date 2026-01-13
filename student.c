@@ -238,17 +238,24 @@ void load_database(list_student *list, char *filename) {
     }
 
     // Structure temporaire pour lire chaque étudiant depuis le fichier
-    student temp;
+    student_data temp;
 
     // Lire chaque étudiant du fichier jusqu'à la fin (EOF)
     // fread retourne 1 si la lecture réussit, 0 si on atteint la fin du fichier
-    while (fread(&temp, sizeof(student), 1, pFile) == 1) {
+    while (fread(&temp, sizeof(student_data), 1, pFile) == 1) {
         // Allouer dynamiquement de la mémoire pour le nouvel étudiant
         // Ceci crée un nouveau nœud dans la liste chaînée
         student *new_student = malloc(sizeof(student));
 
         // Copier toutes les données lues depuis le fichier vers le nouvel étudiant
-        *new_student = temp;
+        strcpy(new_student->nom, temp.nom);
+        strcpy(new_student->prenom, temp.prenom);
+        strcpy(new_student->CNE, temp.CNE);
+        strcpy(new_student->filiere, temp.filiere);
+        new_student->moyenne = temp.moyenne;
+        new_student->date_naissance.jour = temp.date_naissance.jour;
+        new_student->date_naissance.mois = temp.date_naissance.mois;
+        new_student->date_naissance.annee = temp.date_naissance.annee;
 
         // Réinitialiser le pointeur next (il sera défini correctement par add_student)
         // Important : le pointeur 'next' du fichier ne serait pas valide ici
@@ -386,19 +393,106 @@ void delete_all_students(list_student *list) {
     printf("la base de donnee vide avec success");
 }
 
-student *med(list_student *list) {
-    if (list == NULL || list->tete == NULL) {
-        printf("la base de donnee est vide!!!");
+/**
+ * @brief Trouve le milieu d'une liste chaînée en utilisant la technique du pointeur rapide/lent.
+ *
+ * @param head Pointeur vers le premier nœud de la liste.
+ * @return Pointeur vers le nœud du milieu.
+ */
+student *get_middle(student *head) {
+    if (head == NULL) {
         return NULL;
     }
-    student *slow = list->tete;
-    student *fast = list->tete->next;
+
+    student *slow = head;
+    student *fast = head->next;
+
+    // Le pointeur rapide avance deux fois plus vite que le lent
     while (fast != NULL && fast->next != NULL) {
-        fast = fast->next->next;
         slow = slow->next;
+        fast = fast->next->next;
     }
+
     return slow;
 }
 
-// void sort_students_by_grade(list_student *list) {
-// }
+/**
+ * @brief Fusionne deux listes chaînées triées en ordre décroissant par moyenne.
+ *
+ * @param left Pointeur vers le premier nœud de la première liste.
+ * @param right Pointeur vers le premier nœud de la deuxième liste.
+ * @return Pointeur vers le premier nœud de la liste fusionnée.
+ */
+student *merge_sorted_lists(student *left, student *right) {
+    // Si une des listes est vide, retourner l'autre
+    if (left == NULL) return right;
+    if (right == NULL) return left;
+
+    student *result = NULL;
+
+    // Trier par ordre décroissant (meilleures moyennes en premier)
+    if (left->moyenne >= right->moyenne) {
+        result = left;
+        result->next = merge_sorted_lists(left->next, right);
+    } else {
+        result = right;
+        result->next = merge_sorted_lists(left, right->next);
+    }
+    return result;
+}
+
+/**
+ * @brief Trie récursivement une liste chaînée par merge sort.
+ *
+ * @param head Pointeur vers le premier nœud de la liste à trier.
+ * @return Pointeur vers le premier nœud de la liste triée.
+ */
+student *merge_sort_recursive(student *head) {
+    // Cas de base : liste vide ou un seul élément
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+
+    // Trouver le milieu de la liste
+    student *middle = get_middle(head);
+    student *next_of_middle = middle->next;
+
+    // Couper la liste en deux parties
+    middle->next = NULL;
+
+    // Trier récursivement les deux moitiés
+    student *left = merge_sort_recursive(head);
+    student *right = merge_sort_recursive(next_of_middle);
+
+    // Fusionner les deux listes triées
+    student *sorted = merge_sorted_lists(left, right);
+
+    return sorted;
+}
+
+/**
+ * @brief Trie les étudiants par moyenne (ordre décroissant).
+ *
+ * Utilise l'algorithme de tri fusion (merge sort) pour trier la liste
+ * des étudiants en fonction de leur moyenne, du plus élevé au plus faible.
+ *
+ * @param list Pointeur vers la liste d'étudiants à trier.
+ */
+void sort_students_by_grade(list_student *list) {
+    if (list == NULL || list->tete == NULL) {
+        printf("La liste est vide, impossible de trier.\n");
+        return;
+    }
+
+    // Appliquer le tri fusion
+    list->tete = merge_sort_recursive(list->tete);
+
+    // Mettre à jour le pointeur de queue
+    student *current = list->tete;
+    while (current != NULL && current->next != NULL) {
+        current = current->next;
+    }
+    list->queues = current;
+
+    printf("Liste triee par moyenne avec succes.\n");
+}
