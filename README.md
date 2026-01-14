@@ -234,6 +234,8 @@ This project demonstrates:
 - ✅ Input validation and error handling
 - ✅ Interactive CLI design and user experience
 
+**📖 Want to learn more?** Check out [LEARN.md](LEARN.md) for a comprehensive tutorial covering all algorithms, data structures, and implementation details.
+
 ## 👨‍💻 Author
 
 **Mini Database Project**
@@ -242,7 +244,9 @@ This project demonstrates:
 
 ## 📄 License
 
-This project is open-source and available for educational purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This is an open-source educational project. Feel free to use, modify, and distribute for learning purposes.
 
 ---
 
