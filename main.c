@@ -52,9 +52,14 @@ int main() {
                 printf("Entrez Filiere: ");
                 fgets(s->filiere, 30, stdin);
                 s->filiere[strcspn(s->filiere, "\n")] = 0;
-                printf("Entrez Moyenne: ");
+                printf("Entre Moyenne (doit etre entre 0 a 20): ");
                 scanf("%f", &s->moyenne);
-                while (getchar() != '\n');
+                while (s->moyenne > 20 || s->moyenne < 0) {
+                    printf("Moyenne doit etre entre 0 a 20!!!\n");
+                    printf("Entre Moyenne: ");
+                    scanf("%f", &s->moyenne);
+                    while (getchar() != '\n');
+                }
                 add_student(my_db, s);
                 break;
             }
@@ -88,7 +93,7 @@ int main() {
                 printf("Etes-vous sur? (1=Oui, 0=Non): ");
                 int confirm;
                 scanf("%d", &confirm);
-                while (getchar() != '\n'){}
+                while (getchar() != '\n');
                 if (confirm == 1) {
                     delete_all_students(my_db);
                 } else {
