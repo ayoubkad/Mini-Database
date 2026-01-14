@@ -64,17 +64,24 @@ void add_student(list_student *list, student *new_student) {
  * @param list_student Pointeur vers la liste d'étudiants à afficher.
  */
 void display_all_student(list_student *list_student) {
+    if (list_student == NULL || list_student->tete == NULL) {
+        printf("la Base de donnee et vide!!!\n");
+    }
     int compte = 1;
     student *courent = list_student->tete;
     while (courent != NULL) {
-        printf("\n -------les information d'etudiant %d-------  \n", compte);
-        printf("Nom : %s\n", courent->nom);
-        printf("Prenom : %s\n", courent->prenom);
-        printf("CNE : %s\n", courent->CNE);
-        printf("Date de naissance : %d/%d/%d\n", courent->date_naissance.jour,
+        printf("\n");
+        printf("+--------------------------------------------+\n");
+        printf("|             INFORMATION ETUDIANT %-2d       |\n", compte); // J'ai ajouté %-2d pour l'alignement
+        printf("+--------------------------------------------+\n");
+        printf("| CNE            : %-25.25s |\n", courent->CNE);
+        printf("| Nom            : %-25.25s |\n", courent->nom);
+        printf("| Prenom         : %-25.25s |\n", courent->prenom);
+        printf("| Date Naissance : %02d/%02d/%-19d |\n", courent->date_naissance.jour,
                courent->date_naissance.mois, courent->date_naissance.annee);
-        printf("Filiere : %s\n", courent->filiere);
-        printf("Moyenne : %.2f\n", courent->moyenne);
+        printf("| Filiere        : %-25.25s |\n", courent->filiere);
+        printf("| Moyenne        : %-25.2f |\n", courent->moyenne);
+        printf("+--------------------------------------------+\n");
         compte++;
         courent = courent->next;
     }
@@ -188,7 +195,6 @@ void save_database(list_student *list, char *filename) {
         buffer.date_naissance.annee = cursor->date_naissance.annee;
 
         // Écrire la structure complète dans le fichier en un seul bloc
-        // fwrite(&buffer, taille_d'un_bloc, nombre_de_blocs, fichier)
         fwrite(&buffer, sizeof(student_data), 1, pFile);
 
         // Passer à l'étudiant suivant dans la liste
@@ -233,7 +239,7 @@ void load_database(list_student *list, char *filename) {
     FILE *pFile = fopen(filename, "rb");
 
     if (pFile == NULL) {
-        printf("Impossible d'ouverture a ce fichier %s\n", filename);
+        printf("Aucune base de donnees trouvee. Creation d'une nouvelle base...\n");
         return;
     }
 
@@ -274,7 +280,7 @@ void load_database(list_student *list, char *filename) {
  * @brief Modifie les informations d'un étudiant identifié par son CNE.
  *
  * Recherche un étudiant dans la liste en utilisant son CNE et permet
- * de modifier l'un de ses attributs (nom, prénom, date de naissance,
+ * de modifier l'un de ses attributs (nom, prénom, date de naiéssance,
  * filière ou moyenne) selon le choix de l'utilisateur.
  *
  * @param list Pointeur vers la liste d'étudiants.
@@ -298,14 +304,16 @@ void modify_student(list_student *list, const char *cne_to_modify) {
             printf("5. Moyenne\n");
             printf("Votre choix: ");
             scanf("%d", &choice);
-
+            while (getchar() != '\n') {
+            }
             // Traiter le choix de l'utilisateur
             switch (choice) {
                 case 1: {
                     // Modifier le nom
                     char new_nom[20];
                     printf("entrer nouvelle Nom : ");
-                    scanf("%s", new_nom); // Note: fgets() serait plus sûr pour les noms composés comme "EL Amrani"
+                    fgets(new_nom, 20, stdin); // Note: fgets() serait plus sûr pour les noms composés comme "EL Amrani"
+                    new_nom[strcspn(new_nom, "\n")] = 0; // strcspn()  qui return combien de caractere a '\n'
                     strcpy(cursor->nom, new_nom);
                     break;
                 }
@@ -313,7 +321,8 @@ void modify_student(list_student *list, const char *cne_to_modify) {
                     // Modifier le prénom
                     char new_prenom[20];
                     printf("entrer nouvelle Prenom : ");
-                    scanf("%s", new_prenom);
+                    fgets(new_prenom, 20, stdin);
+                    new_prenom[strcspn(new_prenom, "\n")] = 0;
                     strcpy(cursor->prenom, new_prenom);
                     break;
                 }
@@ -322,6 +331,8 @@ void modify_student(list_student *list, const char *cne_to_modify) {
                     Date new_date;
                     printf("entrer nouvelle Date comme (1 6 2005) : ");
                     scanf("%d%d%d", &new_date.jour, &new_date.mois, &new_date.annee);
+                    while (getchar() != '\n') {
+                    }
                     cursor->date_naissance.jour = new_date.jour;
                     cursor->date_naissance.mois = new_date.mois;
                     cursor->date_naissance.annee = new_date.annee;
@@ -331,7 +342,8 @@ void modify_student(list_student *list, const char *cne_to_modify) {
                     // Modifier la filière
                     char new_filiere[30];
                     printf("entrer nouvelle Filiere : ");
-                    scanf("%s", new_filiere);
+                    fgets(new_filiere, 30, stdin);
+                    new_filiere[strcspn(new_filiere, "\n")] = 0;
                     strcpy(cursor->filiere, new_filiere);
                     break;
                 }
@@ -340,6 +352,7 @@ void modify_student(list_student *list, const char *cne_to_modify) {
                     float new_moyenne;
                     printf("Entrer nouvelle Moyenne : ");
                     scanf("%f", &new_moyenne);
+                    while (getchar() != '\n');
                     cursor->moyenne = new_moyenne;
                     break;
                 }
@@ -361,14 +374,17 @@ void search_student_by_cne(list_student *list, char *cne) {
     student *courent = list->tete;
     while (courent != NULL) {
         if (strcmp(courent->CNE, cne) == 0) {
-            printf("\n -------l'information d'etudiant  -------  \n");
-            printf("Nom : %s\n", courent->nom);
-            printf("Prenom : %s\n", courent->prenom);
-            printf("CNE : %s\n", courent->CNE);
-            printf("Date de naissance : %d/%d/%d\n", courent->date_naissance.jour,
+            printf("+--------------------------------------------+\n");
+            printf("|             INFORMATION ETUDIANT           |\n"); // J'ai ajouté %-2d pour l'alignement
+            printf("+--------------------------------------------+\n");
+            printf("| CNE            : %-25.25s |\n", courent->CNE);
+            printf("| Nom            : %-25.25s |\n", courent->nom);
+            printf("| Prenom         : %-25.25s |\n", courent->prenom);
+            printf("| Date Naissance : %02d/%02d/%-19d |\n", courent->date_naissance.jour,
                    courent->date_naissance.mois, courent->date_naissance.annee);
-            printf("Filiere : %s\n", courent->filiere);
-            printf("Moyenne : %.2f\n", courent->moyenne);
+            printf("| Filiere        : %-25.25s |\n", courent->filiere);
+            printf("| Moyenne        : %-25.2f |\n", courent->moyenne);
+            printf("+--------------------------------------------+\n");
             return;
         }
         courent = courent->next;

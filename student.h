@@ -12,7 +12,7 @@ typedef struct student {
     char nom[20];
     char prenom[20];
     Date date_naissance;
-    char CNE[10];
+    char CNE[15];
     char filiere[30];
     float moyenne;
     struct student *next;
@@ -22,7 +22,7 @@ typedef struct {
     char nom[20];
     char prenom[20];
     Date date_naissance;
-    char CNE[10];
+    char CNE[15];
     char filiere[30];
     float moyenne;
 } student_data;
@@ -43,9 +43,6 @@ void search_student_by_cne(list_student *list, char *cne);
 void delete_all_students(list_student *list);
 void modify_student(list_student *list, const char *cne_to_modify);
 void sort_students_by_grade(list_student *list);
-
-
-// Helper functions for sorting
 student *get_middle(student *head);
 student *merge_sorted_lists(student *left, student *right);
 student *merge_sort_recursive(student *head);

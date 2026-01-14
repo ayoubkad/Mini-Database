@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <string.h>
 #include "student.h"
-
+// #include <windows.h> // pour les Accents
 
 /**
  * @brief Point d'entrée principal du programme.
@@ -11,12 +12,13 @@
  * @return 0 si le programme s'exécute correctement.
  */
 int main() {
+    // SetConsoleOutputCP(65001); // pour les Accents
     list_student *my_db = creat_list_student();
 
     load_database(my_db, "my_data.db");
 
     int choice = 0;
-    char cne_buffer[20];
+    char cne_buffer[15];
 
     do {
         printf("\n=== MINI DATABASE MENU ===\n");
@@ -30,22 +32,29 @@ int main() {
         printf("8. Sauvegarder et Quitter\n");
         printf("Votre choix: ");
         scanf("%d", &choice);
-
+        while (getchar() != '\n');
         switch (choice) {
             case 1: {
                 student *s = creat_student();
                 printf("Entrez Nom: ");
-                scanf("%s", s->nom);
+                fgets(s->nom, 20, stdin);
+                s->nom[strcspn(s->nom, "\n")] = 0;
                 printf("Entrez Prenom: ");
-                scanf("%s", s->prenom);
+                fgets(s->prenom, 20, stdin);
+                s->prenom[strcspn(s->prenom, "\n")] = 0;
                 printf("Entrez Date de naissance (jour mois annee): ");
-                scanf("%d %d %d", &s->date_naissance.jour, &s->date_naissance.mois, &s->date_naissance.annee);
+                scanf("%d %d %d", &s->date_naissance.jour, &s->date_naissance.mois,
+                      &s->date_naissance.annee);
+                while (getchar() != '\n');
                 printf("Entrez CNE: ");
-                scanf("%s", s->CNE);
+                fgets(s->CNE, 15, stdin);
+                s->CNE[strcspn(s->CNE, "\n")] = 0;
                 printf("Entrez Filiere: ");
-                scanf("%s", s->filiere);
+                fgets(s->filiere, 30, stdin);
+                s->filiere[strcspn(s->filiere, "\n")] = 0;
                 printf("Entrez Moyenne: ");
                 scanf("%f", &s->moyenne);
+                while (getchar() != '\n');
                 add_student(my_db, s);
                 break;
             }
@@ -54,17 +63,21 @@ int main() {
                 break;
             case 3:
                 printf("\nEntrez le CNE de l'etudiant a supprimer : ");
-                scanf("%s", cne_buffer);
+                fgets(cne_buffer, 15, stdin);
+                cne_buffer[strcspn(cne_buffer, "\n")] = 0;
                 delete_student(my_db, cne_buffer);
                 break;
             case 4:
-                printf("\nEntrez le CNE de l'etudiant a modifiee : ");
-                scanf("%s", cne_buffer);
+                printf("\nEntrez le CNE de l'etudiant a modifier : ");
+                fgets(cne_buffer, 15, stdin);
+                cne_buffer[strcspn(cne_buffer, "\n")] = 0;
                 modify_student(my_db, cne_buffer);
                 break;
+
             case 5:
                 printf("\nEntrez le CNE de l'etudiant a rechercher : ");
-                scanf("%s", cne_buffer);
+                fgets(cne_buffer, 15, stdin);
+                cne_buffer[strcspn(cne_buffer, "\n")] = 0;
                 search_student_by_cne(my_db, cne_buffer);
                 break;
             case 6:
@@ -75,6 +88,7 @@ int main() {
                 printf("Etes-vous sur? (1=Oui, 0=Non): ");
                 int confirm;
                 scanf("%d", &confirm);
+                while (getchar() != '\n'){}
                 if (confirm == 1) {
                     delete_all_students(my_db);
                 } else {
@@ -85,8 +99,8 @@ int main() {
                 save_database(my_db, "my_data.db");
                 printf("Donnees sauvegardees. Au revoir!\n");
                 break;
-        default:
-            printf("Choix invalide!\n");
+            default:
+                printf("Choix invalide!\n");
         }
     } while (choice != 8);
 
