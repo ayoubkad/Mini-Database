@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "student.h"
+#include "undo_stack.h"
 // #include <windows.h> // pour les Accents
-
 /**
  * @brief Point d'entrée principal du programme.
  * 
@@ -14,11 +13,12 @@
 int main() {
     // SetConsoleOutputCP(65001); // pour les Accents
     list_student *my_db = creat_list_student();
-
+    UndoStack *my_stack = create_undo_stack();
     load_database(my_db, "my_data.db");
 
     int choice = 0;
     char cne_buffer[15];
+
 
     do {
         printf("\n=== MINI DATABASE MENU ===\n");
@@ -29,7 +29,8 @@ int main() {
         printf("5. Rechercher un etudiant par CNE\n");
         printf("6. Trier les etudiants par moyenne\n");
         printf("7. Supprimer tous les etudiants\n");
-        printf("8. Sauvegarder et Quitter\n");
+        printf("8. Gestion de l'Historique (Afficher / Annuler)\n");
+        printf("9. Sauvegarder et Quitter\n");
         printf("Votre choix: ");
         scanf("%d", &choice);
         while (getchar() != '\n');
@@ -60,7 +61,7 @@ int main() {
                     scanf("%f", &s->moyenne);
                     while (getchar() != '\n');
                 }
-                add_student(my_db, s);
+                add_student(my_db, s, my_stack);
                 break;
             }
             case 2:
@@ -70,13 +71,13 @@ int main() {
                 printf("\nEntrez le CNE de l'etudiant a supprimer : ");
                 fgets(cne_buffer, 15, stdin);
                 cne_buffer[strcspn(cne_buffer, "\n")] = 0;
-                delete_student(my_db, cne_buffer);
+                delete_student(my_db, cne_buffer, my_stack);
                 break;
             case 4:
                 printf("\nEntrez le CNE de l'etudiant a modifier : ");
                 fgets(cne_buffer, 15, stdin);
                 cne_buffer[strcspn(cne_buffer, "\n")] = 0;
-                modify_student(my_db, cne_buffer);
+                modify_student(my_db, cne_buffer, my_stack);
                 break;
 
             case 5:
@@ -90,6 +91,7 @@ int main() {
                 break;
             case 7:
                 printf("\nATTENTION: Cette action supprimera tous les etudiants!\n");
+                printf("NB : les etudiants apres la suppression n'ajoute pas dans Historique!!!");
                 printf("Etes-vous sur? (1=Oui, 0=Non): ");
                 int confirm;
                 scanf("%d", &confirm);
@@ -101,13 +103,34 @@ int main() {
                 }
                 break;
             case 8:
+                int sub_choice = 0;
+                printf("\n--- MENU HISTORIQUE ---\n");
+                printf("1. Afficher la liste des actions (Voir l'historique)\n");
+                printf("2. Annuler la derniere action (Undo)\n");
+                printf("0. Retour au menu principal\n");
+                printf("Votre choix : ");
+
+                scanf("%d", &sub_choice);
+                while (getchar() != '\n');
+
+                if (sub_choice == 1) {
+                    display_undo_history(my_stack);
+                } else if (sub_choice == 2) {
+                    execute_undo(my_db, my_stack);
+                } else if (sub_choice == 0) {
+                    printf("Retour au menu principal...\n");
+                } else {
+                    printf("Choix invalide !\n");
+                }
+                break;
+            case 9:
                 save_database(my_db, "my_data.db");
+                free_undo_stack(my_stack);
                 printf("Donnees sauvegardees. Au revoir!\n");
                 break;
             default:
                 printf("Choix invalide!\n");
         }
-    } while (choice != 8);
-
+    } while (choice != 9);
     return 0;
 }

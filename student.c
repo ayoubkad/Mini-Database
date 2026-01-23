@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include "student.h"
 #include <string.h>
 #include <stdio.h>
 
+#include "undo_stack.h"
 /**
  * @brief Crée et initialise une liste d'étudiants vide.
  * @return Un pointeur vers la nouvelle liste d'étudiants.
@@ -46,13 +46,16 @@ student *creat_student() {
  * @param list Pointeur vers la liste d'étudiants.
  * @param new_student Pointeur vers l'étudiant à ajouter.
  */
-void add_student(list_student *list, student *new_student) {
+void add_student(list_student *list, student *new_student, UndoStack *stack) {
     if (list->tete == NULL) {
         list->tete = new_student;
         list->queues = new_student;
     } else {
         list->queues->next = new_student;
         list->queues = new_student;
+    }
+    if (stack != NULL) {
+        push_undo(stack, ADD_OPERATION, new_student);
     }
 }
 
@@ -96,7 +99,7 @@ void display_all_student(list_student *list_student) {
  * @param list Pointeur vers la liste d'étudiants.
  * @param cne_to_delete Chaîne de caractères représentant le CNE de l'étudiant à supprimer.
  */
-void delete_student(list_student *list, char *cne_to_delete) {
+void delete_student(list_student *list, char *cne_to_delete, UndoStack *stack) {
     if (list == NULL || list->tete == NULL) {
         printf("La liste est vide ou n'existe pas.\n");
         return;
@@ -114,11 +117,14 @@ void delete_student(list_student *list, char *cne_to_delete) {
             list->queues = NULL;
         }
 
+        if (stack == NULL) {
+            push_undo(stack, DELETE_OPERATION, temp);
+        }
+
         free(temp);
         printf("Etudiant supprime avec succes.\n");
         return;
     }
-
     while (current != NULL && strcmp(current->CNE, cne_to_delete) != 0) {
         previous = current;
         current = current->next;
@@ -134,6 +140,10 @@ void delete_student(list_student *list, char *cne_to_delete) {
 
     if (current == list->queues) {
         list->queues = previous;
+    }
+
+    if (stack = NULL) {
+        push_undo(stack, DELETE_OPERATION, current);
     }
 
     free(current);
@@ -269,7 +279,7 @@ void load_database(list_student *list, char *filename) {
 
         // Ajouter l'étudiant à la fin de la liste chaînée
         // Cela reconstruit la structure de liste originale
-        add_student(list, new_student);
+        add_student(list, new_student, NULL);
     }
 
     fclose(pFile); // Fermer le fichier après la lecture complète
@@ -286,14 +296,15 @@ void load_database(list_student *list, char *filename) {
  * @param list Pointeur vers la liste d'étudiants.
  * @param cne_to_modify CNE de l'étudiant à modifier.
  */
-void modify_student(list_student *list, const char *cne_to_modify) {
+void modify_student(list_student *list, const char *cne_to_modify, UndoStack *stack) {
     // Initialiser le curseur au début de la liste
     student *cursor = list->tete;
-
     // Parcourir la liste pour trouver l'étudiant avec le CNE correspondant
     while (cursor != NULL) {
         if (strcmp(cursor->CNE, cne_to_modify) == 0) {
             int choice;
+
+            push_undo(stack, MODIFY_OPERATION, cursor);
 
             // Afficher le menu des options de modification
             printf("Que voulez-vous changer?\n");

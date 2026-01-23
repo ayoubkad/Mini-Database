@@ -8,13 +8,17 @@ include_directories(.)
 add_executable(Mini_Database
         main.c
         student.c
-        student.h)
+        student.h
+        undo_stack.c
+        undo_stack.h)
 
 # Executable pour les tests
 add_executable(Test_Student
         test_student.c
         student.c
-        student.h)
+        student.h
+        undo_stack.c
+        undo_stack.h)
 
 # Activer CTest
 enable_testing()
