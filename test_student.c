@@ -3,6 +3,7 @@
 #include <string.h>
 #include "student.h"
 #include "undo_stack.h"
+#include "arbres_binaire.h"
 
 // Déclarations des fonctions manquantes dans student.h
 void add_student(list_student *list, student *new_student, UndoStack *stack);
@@ -440,6 +441,232 @@ void test_merge_sort_recursive() {
 }
 
 /**
+ * @brief Test de création d'un noeud d'arbre binaire.
+ */
+void test_create_ab_node() {
+    printf("\n\n=== Test de creation d'un noeud d'arbre binaire ===\n");
+    
+    // Test avec un étudiant valide
+    student *s = create_test_student("Alami", "Ahmed", "CNE001", 15.5);
+    ab_node_student *node = create_ab_node(s);
+    
+    if (node != NULL && node->std == s && node->filsg == NULL && node->filsd == NULL) {
+        printf("SUCCESS: Noeud cree avec succes.\n");
+        printf("  Etudiant: %s %s, Moyenne: %.2f\n", node->std->nom, node->std->prenom, node->std->moyenne);
+    } else {
+        printf("ECHEC: Creation de noeud incorrecte.\n");
+    }
+    
+    // Test avec NULL
+    ab_node_student *null_node = create_ab_node(NULL);
+    if (null_node == NULL) {
+        printf("SUCCESS: create_ab_node retourne NULL pour un etudiant NULL.\n");
+    } else {
+        printf("ECHEC: create_ab_node devrait retourner NULL.\n");
+    }
+    
+    free(node);
+    free(s);
+}
+
+/**
+ * @brief Test de création de la racine d'arbre binaire.
+ */
+void test_create_ab_racine() {
+    printf("\n\n=== Test de creation de la racine d'arbre ===\n");
+    
+    ab_racine_student *racine = create_ab_racine();
+    
+    if (racine != NULL && racine->racine == NULL) {
+        printf("SUCCESS: Racine d'arbre creee avec succes (racine vide).\n");
+    } else {
+        printf("ECHEC: Creation de racine incorrecte.\n");
+    }
+    
+    free(racine);
+}
+
+/**
+ * @brief Test d'insertion dans un arbre binaire de recherche.
+ */
+void test_insert_bst() {
+    printf("\n\n=== Test d'insertion dans un arbre binaire de recherche ===\n");
+    
+    ab_racine_student *racine = create_ab_racine();
+    
+    // Insérer plusieurs étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.0);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 12.0);
+    student *s3 = create_test_student("Cherif", "Hassan", "CNE003", 18.0);
+    student *s4 = create_test_student("Drissi", "Salma", "CNE004", 14.0);
+    student *s5 = create_test_student("El Amrani", "Youssef", "CNE005", 16.0);
+    
+    ab_node_student *n1 = create_ab_node(s1);
+    ab_node_student *n2 = create_ab_node(s2);
+    ab_node_student *n3 = create_ab_node(s3);
+    ab_node_student *n4 = create_ab_node(s4);
+    ab_node_student *n5 = create_ab_node(s5);
+    
+    insert_bst(racine, n1);
+    insert_bst(racine, n2);
+    insert_bst(racine, n3);
+    insert_bst(racine, n4);
+    insert_bst(racine, n5);
+    
+    // Vérifier que la racine n'est pas NULL
+    if (racine->racine != NULL) {
+        printf("SUCCESS: Les noeuds ont ete inseres dans l'arbre.\n");
+        printf("  Racine (moyenne): %.2f\n", racine->racine->std->moyenne);
+        
+        // Vérifier la structure BST
+        if (racine->racine->std->moyenne == 15.0) {
+            printf("  Fils gauche (moyenne < 15.0): ");
+            if (racine->racine->filsg != NULL) {
+                printf("%.2f\n", racine->racine->filsg->std->moyenne);
+            } else {
+                printf("NULL\n");
+            }
+            
+            printf("  Fils droit (moyenne >= 15.0): ");
+            if (racine->racine->filsd != NULL) {
+                printf("%.2f\n", racine->racine->filsd->std->moyenne);
+            } else {
+                printf("NULL\n");
+            }
+        }
+    } else {
+        printf("ECHEC: L'arbre est vide apres insertion.\n");
+    }
+    
+    // Test avec NULL
+    insert_bst(NULL, n1);
+    insert_bst(racine, NULL);
+    printf("SUCCESS: Aucun crash avec parametres NULL.\n");
+    
+    free_bst_nodes(racine->racine);
+    free(racine);
+    free(s1);
+    free(s2);
+    free(s3);
+    free(s4);
+    free(s5);
+}
+
+/**
+ * @brief Test d'affichage de l'arbre trié.
+ */
+void test_afficher_arbres_trie() {
+    printf("\n\n=== Test d'affichage d'arbre trie ===\n");
+    
+    ab_racine_student *racine = create_ab_racine();
+    
+    // Test avec arbre vide
+    printf("\nTest avec arbre vide:\n");
+    afficher_arbres_trie(racine);
+    
+    // Ajouter des étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.0);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 12.0);
+    student *s3 = create_test_student("Cherif", "Hassan", "CNE003", 18.0);
+    student *s4 = create_test_student("Drissi", "Salma", "CNE004", 14.0);
+    student *s5 = create_test_student("El Amrani", "Youssef", "CNE005", 16.0);
+    
+    insert_bst(racine, create_ab_node(s1));
+    insert_bst(racine, create_ab_node(s2));
+    insert_bst(racine, create_ab_node(s3));
+    insert_bst(racine, create_ab_node(s4));
+    insert_bst(racine, create_ab_node(s5));
+    
+    printf("\nAffichage de l'arbre (ordre decroissant):\n");
+    afficher_arbres_trie(racine);
+    
+    printf("\nSUCCESS: L'arbre a ete affiche (verifiez visuellement l'ordre decroissant).\n");
+    
+    free_bst_nodes(racine->racine);
+    free(racine);
+    free(s1);
+    free(s2);
+    free(s3);
+    free(s4);
+    free(s5);
+}
+
+/**
+ * @brief Test de libération de la mémoire de l'arbre.
+ */
+void test_free_bst_nodes() {
+    printf("\n\n=== Test de liberation de memoire de l'arbre ===\n");
+    
+    ab_racine_student *racine = create_ab_racine();
+    student *students[10];
+    
+    // Ajouter des étudiants
+    for (int i = 0; i < 10; i++) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student("Nom", "Prenom", cne, 10.0 + i);
+        insert_bst(racine, create_ab_node(students[i]));
+    }
+    
+    printf("10 noeuds inseres dans l'arbre.\n");
+    
+    // Libérer tous les noeuds
+    free_bst_nodes(racine->racine);
+    racine->racine = NULL;
+    
+    printf("SUCCESS: Tous les noeuds ont ete liberes (aucun crash).\n");
+    
+    // Test avec NULL
+    free_bst_nodes(NULL);
+    printf("SUCCESS: Aucun crash avec free_bst_nodes(NULL).\n");
+    
+    // Libérer les étudiants
+    for (int i = 0; i < 10; i++) {
+        free(students[i]);
+    }
+    
+    free(racine);
+}
+
+/**
+ * @brief Test complet de l'arbre binaire de recherche.
+ */
+void test_bst_complete() {
+    printf("\n\n=== Test complet de l'arbre binaire de recherche ===\n");
+    
+    ab_racine_student *racine = create_ab_racine();
+    
+    // Créer et insérer des étudiants dans un ordre aléatoire
+    float moyennes[] = {15.0, 10.0, 20.0, 8.0, 12.0, 18.0, 22.0};
+    int count = sizeof(moyennes) / sizeof(moyennes[0]);
+    student *students[7]; // Garder les références
+    
+    printf("Insertion des moyennes dans l'ordre: ");
+    for (int i = 0; i < count; i++) {
+        printf("%.1f ", moyennes[i]);
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student("Etudiant", "Test", cne, moyennes[i]);
+        insert_bst(racine, create_ab_node(students[i]));
+    }
+    printf("\n");
+    
+    printf("\nAffichage de l'arbre trie (devrait etre en ordre decroissant):\n");
+    afficher_arbres_trie(racine);
+    
+    printf("\nSUCCESS: Test complet termine.\n");
+    printf("Attendu (ordre decroissant): 22.0, 20.0, 18.0, 15.0, 12.0, 10.0, 8.0\n");
+    
+    free_bst_nodes(racine->racine);
+    free(racine);
+    
+    // Libérer les étudiants
+    for (int i = 0; i < count; i++) {
+        free(students[i]);
+    }
+}
+
+/**
  * @brief Test de la fonction de modification d'étudiant.
  */
 void test_modify_student() {
@@ -587,6 +814,15 @@ int main() {
     // Test de modification
     printf("\n\n*** TESTS DE MODIFICATION ***\n");
     test_modify_student();
+
+    // Tests des arbres binaires
+    printf("\n\n*** TESTS DES ARBRES BINAIRES DE RECHERCHE ***\n");
+    test_create_ab_node();
+    test_create_ab_racine();
+    test_insert_bst();
+    test_afficher_arbres_trie();
+    test_free_bst_nodes();
+    test_bst_complete();
 
     printf("\n========================================\n");
     printf("   FIN DE TOUS LES TESTS\n");

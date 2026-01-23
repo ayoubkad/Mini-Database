@@ -10,7 +10,9 @@ add_executable(Mini_Database
         student.c
         student.h
         undo_stack.c
-        undo_stack.h)
+        undo_stack.h
+        arbres_binaire.c
+        arbres_binaire.h)
 
 # Executable pour les tests
 add_executable(Test_Student

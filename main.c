@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include "arbres_binaire.h"
 #include "undo_stack.h"
 // #include <windows.h> // pour les Accents
 /**
@@ -15,10 +17,8 @@ int main() {
     list_student *my_db = creat_list_student();
     UndoStack *my_stack = create_undo_stack();
     load_database(my_db, "my_data.db");
-
     int choice = 0;
     char cne_buffer[15];
-
 
     do {
         printf("\n=== MINI DATABASE MENU ===\n");
@@ -87,11 +87,28 @@ int main() {
                 search_student_by_cne(my_db, cne_buffer);
                 break;
             case 6:
-                sort_students_by_grade(my_db);
+                // sort_students_by_grade(my_db);
+                if (my_db->tete == NULL) {
+                    printf("La Base de donnee est vide, rien a trier.\n");
+                    break;
+                }
+
+                ab_racine_student *temp_tree = create_ab_racine();
+                // temp_tree->racine = NULL;
+
+                student *current_s = my_db->tete;
+                while (current_s != NULL) {
+                    ab_node_student *new_node = create_ab_node(current_s);
+                    insert_bst(temp_tree, new_node);
+                    current_s = current_s->next;
+                }
+
+                afficher_arbres_trie(temp_tree);
+                free_bst_nodes(temp_tree->racine);
                 break;
             case 7:
                 printf("\nATTENTION: Cette action supprimera tous les etudiants!\n");
-                printf("NB : les etudiants apres la suppression n'ajoute pas dans Historique!!!");
+                printf("NB : les etudiants apres la suppression n'ajoute pas dans Historique!!!\n");
                 printf("Etes-vous sur? (1=Oui, 0=Non): ");
                 int confirm;
                 scanf("%d", &confirm);

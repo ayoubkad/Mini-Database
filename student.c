@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "arbres_binaire.h"
 #include "undo_stack.h"
 /**
  * @brief Crée et initialise une liste d'étudiants vide.
@@ -87,6 +88,33 @@ void display_all_student(list_student *list_student) {
         printf("+--------------------------------------------+\n");
         compte++;
         courent = courent->next;
+    }
+}
+
+void display_student(list_student *list_student, char *cne) {
+    if (list_student == NULL || list_student->tete == NULL) {
+        printf("la Base de donnee et vide!!!\n");
+    }
+    int trouver = 0;
+    student *courent = list_student->tete;
+    while (courent != NULL && strcmp(courent->CNE, cne) != 0) {
+        trouver = 1;
+        printf("\n");
+        printf("+--------------------------------------------+\n");
+        printf("|             INFORMATION ETUDIANT       |\n"); // J'ai ajouté %-2d pour l'alignement
+        printf("+--------------------------------------------+\n");
+        printf("| CNE            : %-25.25s |\n", courent->CNE);
+        printf("| Nom            : %-25.25s |\n", courent->nom);
+        printf("| Prenom         : %-25.25s |\n", courent->prenom);
+        printf("| Date Naissance : %02d/%02d/%-19d |\n", courent->date_naissance.jour,
+               courent->date_naissance.mois, courent->date_naissance.annee);
+        printf("| Filiere        : %-25.25s |\n", courent->filiere);
+        printf("| Moyenne        : %-25.2f |\n", courent->moyenne);
+        printf("+--------------------------------------------+\n");
+        courent = courent->next;
+    }
+    if (trouver == 0) {
+        printf("etudiant n'est pas trouver!!!\n");
     }
 }
 
@@ -522,4 +550,36 @@ void sort_students_by_grade(list_student *list) {
     list->queues = current;
 
     printf("Liste triee par moyenne avec succes.\n");
+}
+
+static void display_student_arbre(student *student) {
+    printf("+--------------------------------------------+\n");
+    printf("|             INFORMATION ETUDIANT       |\n"); // J'ai ajouté %-2d pour l'alignement
+    printf("+--------------------------------------------+\n");
+    printf("| CNE            : %-25.25s |\n", student->CNE);
+    printf("| Nom            : %-25.25s |\n", student->nom);
+    printf("| Prenom         : %-25.25s |\n", student->prenom);
+    printf("| Date Naissance : %02d/%02d/%-19d |\n", student->date_naissance.jour,
+           student->date_naissance.mois, student->date_naissance.annee);
+    printf("| Filiere        : %-25.25s |\n", student->filiere);
+    printf("| Moyenne        : %-25.2f |\n", student->moyenne);
+    printf("+--------------------------------------------+\n");
+}
+
+static void sort_by_arbre_recursive(ab_node_student *node) {
+    if (node != NULL) {
+        sort_by_arbre_recursive(node->filsd);
+        display_student_arbre(node->std);
+        sort_by_arbre_recursive(node->filsg);
+    }
+}
+
+void afficher_arbres_trie(ab_racine_student *racine) {
+    if (racine == NULL || racine->racine == NULL) {
+        printf("L'arbre est vide.\n");
+        return;
+    }
+    printf("\n=== Liste des etudiants triee par moyenne (Decroissant) ===\n");
+    sort_by_arbre_recursive(racine->racine);
+    printf("===========================================================\n");
 }
