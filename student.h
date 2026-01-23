@@ -37,9 +37,13 @@ student *creat_student(); // Crée et initialise un nouvel étudiant.
 
 void display_all_student(list_student *list_student); // Affiche les informations de tous les étudiants de la liste.
 
+void display_student(list_student *list_student, char *cne);
+
 void save_database(list_student *list, char *filename); // Sauvegarde la liste des étudiants dans un fichier.
 
+
 void load_database(list_student *list, char *filename); // Charge la liste des étudiants à partir d'un fichier.
+
 
 void search_student_by_cne(list_student *list, char *cne);
 
@@ -52,4 +56,5 @@ student *get_middle(student *head);
 student *merge_sorted_lists(student *left, student *right);
 
 student *merge_sort_recursive(student *head);
+
 #endif //MINI_DATABASE_STUDENT_H
