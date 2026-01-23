@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "student.h"
+#include "undo_stack.h"
+
+// Déclarations des fonctions manquantes dans student.h
+void add_student(list_student *list, student *new_student, UndoStack *stack);
+void delete_student(list_student *list, char *cne_to_delete, UndoStack *stack);
+void modify_student(list_student *list, const char *cne_to_modify, UndoStack *stack);
 
 /**
  * @brief Fonction auxiliaire pour créer un étudiant de test avec des données spécifiques.
@@ -38,12 +44,12 @@ void test_sort_students_by_grade() {
     list_student *list = creat_list_student();
 
     // Ajouter des étudiants avec différentes moyennes
-    add_student(list, create_test_student("Alami", "Ahmed", "CNE001", 12.5));
-    add_student(list, create_test_student("Bennani", "Fatima", "CNE002", 16.8));
-    add_student(list, create_test_student("Cherif", "Hassan", "CNE003", 14.2));
-    add_student(list, create_test_student("Drissi", "Salma", "CNE004", 18.5));
-    add_student(list, create_test_student("El Amrani", "Youssef", "CNE005", 11.0));
-    add_student(list, create_test_student("Fassi", "Laila", "CNE006", 15.7));
+    add_student(list, create_test_student("Alami", "Ahmed", "CNE001", 12.5), NULL);
+    add_student(list, create_test_student("Bennani", "Fatima", "CNE002", 16.8), NULL);
+    add_student(list, create_test_student("Cherif", "Hassan", "CNE003", 14.2), NULL);
+    add_student(list, create_test_student("Drissi", "Salma", "CNE004", 18.5), NULL);
+    add_student(list, create_test_student("El Amrani", "Youssef", "CNE005", 11.0), NULL);
+    add_student(list, create_test_student("Fassi", "Laila", "CNE006", 15.7), NULL);
 
     printf("Liste avant le tri:\n");
     display_all_student(list);
@@ -105,7 +111,7 @@ void test_sort_single_student() {
     printf("\n\n=== Test de tri avec un seul etudiant ===\n");
     list_student *list = creat_list_student();
 
-    add_student(list, create_test_student("Unique", "Etudiant", "CNE999", 14.5));
+    add_student(list, create_test_student("Unique", "Etudiant", "CNE999", 14.5), NULL);
 
     printf("Avant tri: Moyenne = %.2f\n", list->tete->moyenne);
     sort_students_by_grade(list);
@@ -128,9 +134,9 @@ void test_sort_equal_grades() {
     printf("\n\n=== Test de tri avec moyennes identiques ===\n");
     list_student *list = creat_list_student();
 
-    add_student(list, create_test_student("A", "Premier", "CNE101", 15.0));
-    add_student(list, create_test_student("B", "Deuxieme", "CNE102", 15.0));
-    add_student(list, create_test_student("C", "Troisieme", "CNE103", 15.0));
+    add_student(list, create_test_student("A", "Premier", "CNE101", 15.0), NULL);
+    add_student(list, create_test_student("B", "Deuxieme", "CNE102", 15.0), NULL);
+    add_student(list, create_test_student("C", "Troisieme", "CNE103", 15.0), NULL);
 
     printf("Liste avant tri:\n");
     display_all_student(list);
@@ -154,9 +160,9 @@ void test_sort_with_save_load() {
     list_student *list1 = creat_list_student();
 
     // Ajouter des étudiants
-    add_student(list1, create_test_student("Zaki", "Amina", "CNE201", 13.5));
-    add_student(list1, create_test_student("Yassir", "Omar", "CNE202", 17.2));
-    add_student(list1, create_test_student("Wafi", "Nadia", "CNE203", 15.8));
+    add_student(list1, create_test_student("Zaki", "Amina", "CNE201", 13.5), NULL);
+    add_student(list1, create_test_student("Yassir", "Omar", "CNE202", 17.2), NULL);
+    add_student(list1, create_test_student("Wafi", "Nadia", "CNE203", 15.8), NULL);
 
     // Trier
     sort_students_by_grade(list1);
@@ -205,9 +211,9 @@ void test_search_student_by_cne() {
     list_student *list = creat_list_student();
 
     // Ajouter plusieurs étudiants
-    add_student(list, create_test_student("Alami", "Ahmed", "CNE001", 12.5));
-    add_student(list, create_test_student("Bennani", "Fatima", "CNE002", 16.8));
-    add_student(list, create_test_student("Cherif", "Hassan", "CNE003", 14.2));
+    add_student(list, create_test_student("Alami", "Ahmed", "CNE001", 12.5), NULL);
+    add_student(list, create_test_student("Bennani", "Fatima", "CNE002", 16.8), NULL);
+    add_student(list, create_test_student("Cherif", "Hassan", "CNE003", 14.2), NULL);
 
     printf("\nRecherche d'un etudiant existant (CNE002):\n");
     search_student_by_cne(list, "CNE002");
@@ -229,9 +235,9 @@ void test_delete_all_students() {
     list_student *list = creat_list_student();
 
     // Ajouter plusieurs étudiants
-    add_student(list, create_test_student("Student1", "First", "CNE101", 15.0));
-    add_student(list, create_test_student("Student2", "Second", "CNE102", 16.0));
-    add_student(list, create_test_student("Student3", "Third", "CNE103", 17.0));
+    add_student(list, create_test_student("Student1", "First", "CNE101", 15.0), NULL);
+    add_student(list, create_test_student("Student2", "Second", "CNE102", 16.0), NULL);
+    add_student(list, create_test_student("Student3", "Third", "CNE103", 17.0), NULL);
 
     printf("Liste avant suppression:\n");
     display_all_student(list);
@@ -255,6 +261,185 @@ void test_delete_all_students() {
 }
 
 /**
+ * @brief Test de la fonction get_middle().
+ * Teste la fonction qui trouve le milieu d'une liste chaînée.
+ */
+void test_get_middle() {
+    printf("\n\n=== Test de la fonction get_middle ===\n");
+    list_student *list = creat_list_student();
+
+    // Test avec liste vide
+    student *middle = get_middle(NULL);
+    if (middle == NULL) {
+        printf("SUCCESS: get_middle retourne NULL pour une liste vide.\n");
+    } else {
+        printf("ECHEC: get_middle devrait retourner NULL pour une liste vide.\n");
+    }
+
+    // Test avec un seul élément
+    add_student(list, create_test_student("A", "First", "CNE101", 15.0), NULL);
+    middle = get_middle(list->tete);
+    if (middle != NULL && strcmp(middle->CNE, "CNE101") == 0) {
+        printf("SUCCESS: get_middle fonctionne avec un seul element.\n");
+    } else {
+        printf("ECHEC: get_middle ne fonctionne pas correctement avec un seul element.\n");
+    }
+
+    // Test avec plusieurs éléments (nombre impair)
+    add_student(list, create_test_student("B", "Second", "CNE102", 16.0), NULL);
+    add_student(list, create_test_student("C", "Third", "CNE103", 17.0), NULL);
+    add_student(list, create_test_student("D", "Fourth", "CNE104", 18.0), NULL);
+    add_student(list, create_test_student("E", "Fifth", "CNE105", 19.0), NULL);
+    
+    middle = get_middle(list->tete);
+    if (middle != NULL && strcmp(middle->CNE, "CNE103") == 0) {
+        printf("SUCCESS: get_middle trouve correctement le milieu (5 elements).\n");
+    } else {
+        printf("ECHEC: Milieu attendu CNE103, trouve %s.\n", middle ? middle->CNE : "NULL");
+    }
+
+    // Test avec nombre pair d'éléments
+    delete_all_students(list);
+    add_student(list, create_test_student("A", "First", "CNE201", 15.0), NULL);
+    add_student(list, create_test_student("B", "Second", "CNE202", 16.0), NULL);
+    add_student(list, create_test_student("C", "Third", "CNE203", 17.0), NULL);
+    add_student(list, create_test_student("D", "Fourth", "CNE204", 18.0), NULL);
+    
+    middle = get_middle(list->tete);
+    if (middle != NULL && strcmp(middle->CNE, "CNE202") == 0) {
+        printf("SUCCESS: get_middle fonctionne avec un nombre pair d'elements.\n");
+    } else {
+        printf("ECHEC: Milieu attendu CNE202, trouve %s.\n", middle ? middle->CNE : "NULL");
+    }
+
+    delete_all_students(list);
+    free(list);
+}
+
+/**
+ * @brief Test de la fonction merge_sorted_lists().
+ * Teste la fusion de deux listes triées.
+ */
+void test_merge_sorted_lists() {
+    printf("\n\n=== Test de la fonction merge_sorted_lists ===\n");
+    
+    // Test avec deux listes NULL
+    student *merged = merge_sorted_lists(NULL, NULL);
+    if (merged == NULL) {
+        printf("SUCCESS: merge_sorted_lists retourne NULL pour deux listes vides.\n");
+    } else {
+        printf("ECHEC: merge_sorted_lists devrait retourner NULL.\n");
+    }
+
+    // Créer première liste triée (décroissant): 18.0 -> 15.0 -> 12.0
+    student *list1 = create_test_student("A", "First", "CNE101", 18.0);
+    list1->next = create_test_student("B", "Second", "CNE102", 15.0);
+    list1->next->next = create_test_student("C", "Third", "CNE103", 12.0);
+    list1->next->next->next = NULL;
+
+    // Créer deuxième liste triée (décroissant): 17.0 -> 14.0 -> 11.0
+    student *list2 = create_test_student("D", "Fourth", "CNE201", 17.0);
+    list2->next = create_test_student("E", "Fifth", "CNE202", 14.0);
+    list2->next->next = create_test_student("F", "Sixth", "CNE203", 11.0);
+    list2->next->next->next = NULL;
+
+    // Fusionner les listes
+    merged = merge_sorted_lists(list1, list2);
+
+    printf("Liste fusionnee:\n");
+    student *current = merged;
+    float previous_moyenne = 100.0;
+    int correct = 1;
+    int count = 0;
+    
+    while (current != NULL) {
+        printf("  %s: %.2f\n", current->CNE, current->moyenne);
+        if (current->moyenne > previous_moyenne) {
+            printf("  ERREUR: Ordre incorrect (%.2f > %.2f)\n", current->moyenne, previous_moyenne);
+            correct = 0;
+        }
+        previous_moyenne = current->moyenne;
+        current = current->next;
+        count++;
+    }
+
+    if (correct && count == 6) {
+        printf("SUCCESS: merge_sorted_lists fusionne correctement en ordre decroissant.\n");
+    } else {
+        printf("ECHEC: Probleme dans la fusion (correct=%d, count=%d).\n", correct, count);
+    }
+
+    // Libérer la mémoire
+    while (merged != NULL) {
+        student *temp = merged;
+        merged = merged->next;
+        free(temp);
+    }
+}
+
+/**
+ * @brief Test de la fonction merge_sort_recursive().
+ * Teste le tri récursif d'une liste.
+ */
+void test_merge_sort_recursive() {
+    printf("\n\n=== Test de la fonction merge_sort_recursive ===\n");
+    
+    // Test avec liste NULL
+    student *sorted = merge_sort_recursive(NULL);
+    if (sorted == NULL) {
+        printf("SUCCESS: merge_sort_recursive retourne NULL pour une liste vide.\n");
+    } else {
+        printf("ECHEC: merge_sort_recursive devrait retourner NULL.\n");
+    }
+
+    // Créer une liste non triée
+    student *head = create_test_student("A", "First", "CNE101", 12.5);
+    head->next = create_test_student("B", "Second", "CNE102", 18.0);
+    head->next->next = create_test_student("C", "Third", "CNE103", 14.2);
+    head->next->next->next = create_test_student("D", "Fourth", "CNE104", 16.8);
+    head->next->next->next->next = create_test_student("E", "Fifth", "CNE105", 11.0);
+    head->next->next->next->next->next = NULL;
+
+    printf("Liste avant tri:\n");
+    student *current = head;
+    while (current != NULL) {
+        printf("  %s: %.2f\n", current->CNE, current->moyenne);
+        current = current->next;
+    }
+
+    // Trier la liste
+    sorted = merge_sort_recursive(head);
+
+    printf("\nListe apres tri:\n");
+    current = sorted;
+    float previous_moyenne = 100.0;
+    int correct = 1;
+    
+    while (current != NULL) {
+        printf("  %s: %.2f\n", current->CNE, current->moyenne);
+        if (current->moyenne > previous_moyenne) {
+            printf("  ERREUR: Ordre incorrect\n");
+            correct = 0;
+        }
+        previous_moyenne = current->moyenne;
+        current = current->next;
+    }
+
+    if (correct) {
+        printf("SUCCESS: merge_sort_recursive trie correctement en ordre decroissant.\n");
+    } else {
+        printf("ECHEC: La liste n'est pas correctement triee.\n");
+    }
+
+    // Libérer la mémoire
+    while (sorted != NULL) {
+        student *temp = sorted;
+        sorted = sorted->next;
+        free(temp);
+    }
+}
+
+/**
  * @brief Test de la fonction de modification d'étudiant.
  */
 void test_modify_student() {
@@ -263,7 +448,7 @@ void test_modify_student() {
 
     // Ajouter un étudiant
     student *s = create_test_student("Alami", "Ahmed", "CNE001", 12.5);
-    add_student(list, s);
+    add_student(list, s, NULL);
 
     printf("Etudiant avant modification:\n");
     search_student_by_cne(list, "CNE001");
@@ -273,7 +458,7 @@ void test_modify_student() {
 
     // Test de modification d'un étudiant inexistant
     printf("\nTentative de modification d'un CNE inexistant:\n");
-    modify_student(list, "CNE999");
+    modify_student(list, "CNE999", NULL);
 
     printf("\nSUCCESS: Test de modification complete (verification de base).\n");
 
@@ -304,9 +489,9 @@ void test_search_after_sort() {
     list_student *list = creat_list_student();
 
     // Ajouter des étudiants
-    add_student(list, create_test_student("Zaki", "Amina", "CNE201", 13.5));
-    add_student(list, create_test_student("Yassir", "Omar", "CNE202", 17.2));
-    add_student(list, create_test_student("Wafi", "Nadia", "CNE203", 15.8));
+    add_student(list, create_test_student("Zaki", "Amina", "CNE201", 13.5), NULL);
+    add_student(list, create_test_student("Yassir", "Omar", "CNE202", 17.2), NULL);
+    add_student(list, create_test_student("Wafi", "Nadia", "CNE203", 15.8), NULL);
 
     printf("Liste avant tri:\n");
     display_all_student(list);
@@ -335,22 +520,22 @@ void test_delete_combination() {
     list_student *list = creat_list_student();
 
     // Ajouter plusieurs étudiants
-    add_student(list, create_test_student("A", "First", "CNE301", 15.0));
-    add_student(list, create_test_student("B", "Second", "CNE302", 16.0));
-    add_student(list, create_test_student("C", "Third", "CNE303", 17.0));
-    add_student(list, create_test_student("D", "Fourth", "CNE304", 18.0));
+    add_student(list, create_test_student("A", "First", "CNE301", 15.0), NULL);
+    add_student(list, create_test_student("B", "Second", "CNE302", 16.0), NULL);
+    add_student(list, create_test_student("C", "Third", "CNE303", 17.0), NULL);
+    add_student(list, create_test_student("D", "Fourth", "CNE304", 18.0), NULL);
 
     printf("Liste initiale (4 etudiants):\n");
     display_all_student(list);
 
     // Supprimer un étudiant
     printf("\n\nSuppression de CNE302:\n");
-    delete_student(list, "CNE302");
+    delete_student(list, "CNE302", NULL);
     display_all_student(list);
 
     // Supprimer un autre étudiant
     printf("\n\nSuppression de CNE304:\n");
-    delete_student(list, "CNE304");
+    delete_student(list, "CNE304", NULL);
     display_all_student(list);
 
     // Supprimer tous les étudiants restants
@@ -381,6 +566,12 @@ int main() {
     test_sort_single_student();
     test_sort_equal_grades();
     test_sort_with_save_load();
+
+    // Tests des fonctions auxiliaires du tri
+    printf("\n\n*** TESTS DES FONCTIONS AUXILIAIRES DE TRI ***\n");
+    test_get_middle();
+    test_merge_sorted_lists();
+    test_merge_sort_recursive();
 
     // Tests de recherche
     printf("\n\n*** TESTS DE RECHERCHE ***\n");
