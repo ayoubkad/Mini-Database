@@ -4,6 +4,7 @@
 #include "student.h"
 #include "undo_stack.h"
 #include "arbres_binaire.h"
+#include "hash_table.h"
 
 // Déclarations des fonctions manquantes dans student.h
 void add_student(list_student *list, student *new_student, UndoStack *stack);
@@ -779,6 +780,453 @@ void test_delete_combination() {
 }
 
 /**
+ * @brief Test de création d'une table de hachage.
+ */
+void test_create_hash_table() {
+    printf("\n\n=== Test de creation d'une table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    if (ht != NULL) {
+        printf("SUCCESS: Table de hachage creee avec succes.\n");
+        
+        // Vérifier que toutes les cases sont initialisées à NULL
+        int all_null = 1;
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (ht->table[i] != NULL) {
+                all_null = 0;
+                break;
+            }
+        }
+        
+        if (all_null) {
+            printf("SUCCESS: Toutes les cases de la table sont initialisees a NULL.\n");
+        } else {
+            printf("ECHEC: Certaines cases ne sont pas initialisees a NULL.\n");
+        }
+        
+        free_table(ht);
+    } else {
+        printf("ECHEC: Impossible de creer la table de hachage.\n");
+    }
+}
+
+/**
+ * @brief Test de la fonction de hachage.
+ */
+void test_hash_function() {
+    printf("\n\n=== Test de la fonction de hachage ===\n");
+    
+    // Test avec différentes clés
+    const char *keys[] = {"CNE001", "CNE002", "CNE999", "ABC123", "XYZ789"};
+    int num_keys = sizeof(keys) / sizeof(keys[0]);
+    
+    printf("Calcul des indices de hachage:\n");
+    for (int i = 0; i < num_keys; i++) {
+        unsigned int index = hash(keys[i]);
+        printf("  %s -> Index: %u\n", keys[i], index);
+        
+        if (index >= TABLE_SIZE) {
+            printf("ECHEC: L'index %u depasse TABLE_SIZE (%d)!\n", index, TABLE_SIZE);
+            return;
+        }
+    }
+    
+    // Vérifier que des clés identiques donnent le même hash
+    unsigned int h1 = hash("CNE001");
+    unsigned int h2 = hash("CNE001");
+    
+    if (h1 == h2) {
+        printf("SUCCESS: La fonction de hachage est deterministe.\n");
+    } else {
+        printf("ECHEC: La fonction de hachage n'est pas deterministe.\n");
+    }
+}
+
+/**
+ * @brief Test d'insertion dans la table de hachage.
+ */
+void test_insert_hash() {
+    printf("\n\n=== Test d'insertion dans la table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Créer et insérer des étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.5);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 16.8);
+    student *s3 = create_test_student("Cherif", "Hassan", "CNE003", 14.2);
+    
+    insert_hash(ht, s1);
+    insert_hash(ht, s2);
+    insert_hash(ht, s3);
+    
+    printf("3 etudiants inseres dans la table de hachage.\n");
+    print_table(ht);
+    
+    // Test avec paramètres NULL
+    insert_hash(NULL, s1);
+    insert_hash(ht, NULL);
+    printf("\nSUCCESS: Aucun crash avec parametres NULL.\n");
+    
+    free(s1);
+    free(s2);
+    free(s3);
+    free_table(ht);
+}
+
+/**
+ * @brief Test de recherche dans la table de hachage.
+ */
+void test_search_hash() {
+    printf("\n\n=== Test de recherche dans la table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Créer et insérer des étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.5);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 16.8);
+    student *s3 = create_test_student("Cherif", "Hassan", "CNE003", 14.2);
+    
+    insert_hash(ht, s1);
+    insert_hash(ht, s2);
+    insert_hash(ht, s3);
+    
+    printf("Table de hachage avec 3 etudiants:\n");
+    print_table(ht);
+    
+    // Rechercher un étudiant existant
+    printf("\n\nRecherche de CNE002:\n");
+    student *found = search(ht, "CNE002");
+    
+    if (found != NULL && strcmp(found->CNE, "CNE002") == 0) {
+        printf("SUCCESS: Etudiant trouve: %s %s (Moyenne: %.2f)\n",
+               found->nom, found->prenom, found->moyenne);
+    } else {
+        printf("ECHEC: Etudiant CNE002 non trouve.\n");
+    }
+    
+    // Rechercher un étudiant inexistant
+    printf("\n\nRecherche de CNE999 (inexistant):\n");
+    found = search(ht, "CNE999");
+    
+    if (found == NULL) {
+        printf("SUCCESS: NULL retourne pour un etudiant inexistant.\n");
+    } else {
+        printf("ECHEC: Un etudiant a ete trouve alors qu'il ne devrait pas exister.\n");
+    }
+    
+    // Test avec paramètres NULL
+    found = search(NULL, "CNE001");
+    found = search(ht, NULL);
+    printf("\nSUCCESS: Aucun crash avec parametres NULL.\n");
+    
+    free(s1);
+    free(s2);
+    free(s3);
+    free_table(ht);
+}
+
+/**
+ * @brief Test de suppression dans la table de hachage.
+ */
+void test_delete_hash() {
+    printf("\n\n=== Test de suppression dans la table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Créer et insérer des étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.5);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 16.8);
+    student *s3 = create_test_student("Cherif", "Hassan", "CNE003", 14.2);
+    
+    insert_hash(ht, s1);
+    insert_hash(ht, s2);
+    insert_hash(ht, s3);
+    
+    printf("Table initiale:\n");
+    print_table(ht);
+    
+    // Supprimer un étudiant
+    printf("\n\nSuppression de CNE002:\n");
+    delete_student_hash(ht, "CNE002");
+    print_table(ht);
+    
+    // Vérifier que l'étudiant est bien supprimé
+    student *found = search(ht, "CNE002");
+    if (found == NULL) {
+        printf("SUCCESS: Etudiant CNE002 correctement supprime.\n");
+    } else {
+        printf("ECHEC: Etudiant CNE002 trouve alors qu'il devrait etre supprime.\n");
+    }
+    
+    // Vérifier que les autres étudiants sont toujours là
+    found = search(ht, "CNE001");
+    if (found != NULL) {
+        printf("SUCCESS: Etudiant CNE001 toujours present.\n");
+    } else {
+        printf("ECHEC: Etudiant CNE001 non trouve.\n");
+    }
+    
+    // Supprimer un étudiant inexistant
+    printf("\n\nSuppression de CNE999 (inexistant):\n");
+    delete_student_hash(ht, "CNE999");
+    printf("SUCCESS: Aucun crash lors de la suppression d'un etudiant inexistant.\n");
+    
+    // Test avec paramètres NULL
+    delete_student_hash(NULL, "CNE001");
+    delete_student_hash(ht, NULL);
+    printf("\nSUCCESS: Aucun crash avec parametres NULL.\n");
+    
+    free(s1);
+    free(s2);
+    free(s3);
+    free_table(ht);
+}
+
+/**
+ * @brief Test de gestion des collisions dans la table de hachage.
+ */
+void test_hash_collisions() {
+    printf("\n\n=== Test de gestion des collisions ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Insérer beaucoup d'étudiants pour provoquer des collisions
+    student *students[20];
+    for (int i = 0; i < 20; i++) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student("Nom", "Prenom", cne, 10.0 + i * 0.5);
+        insert_hash(ht, students[i]);
+    }
+    
+    printf("20 etudiants inseres dans la table de hachage:\n");
+    print_table(ht);
+    
+    // Vérifier que tous les étudiants sont récupérables
+    int all_found = 1;
+    for (int i = 0; i < 20; i++) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        student *found = search(ht, cne);
+        
+        if (found == NULL || strcmp(found->CNE, cne) != 0) {
+            printf("ECHEC: Etudiant %s non trouve ou incorrect.\n", cne);
+            all_found = 0;
+        }
+    }
+    
+    if (all_found) {
+        printf("\nSUCCESS: Tous les 20 etudiants ont ete recuperes correctement.\n");
+        printf("La gestion des collisions fonctionne correctement.\n");
+    } else {
+        printf("\nECHEC: Certains etudiants n'ont pas ete trouves.\n");
+    }
+    
+    // Libérer la mémoire
+    for (int i = 0; i < 20; i++) {
+        free(students[i]);
+    }
+    free_table(ht);
+}
+
+/**
+ * @brief Test de suppression avec collisions.
+ */
+void test_delete_with_collisions() {
+    printf("\n\n=== Test de suppression avec collisions ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Insérer plusieurs étudiants
+    student *students[10];
+    for (int i = 0; i < 10; i++) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student("Nom", "Prenom", cne, 10.0 + i);
+        insert_hash(ht, students[i]);
+    }
+    
+    printf("10 etudiants inseres:\n");
+    print_table(ht);
+    
+    // Supprimer quelques étudiants
+    printf("\n\nSuppression de CNE001, CNE005, CNE009:\n");
+    delete_student_hash(ht, "CNE001");
+    delete_student_hash(ht, "CNE005");
+    delete_student_hash(ht, "CNE009");
+    
+    print_table(ht);
+    
+    // Vérifier que les étudiants supprimés ne sont plus là
+    int correct = 1;
+    if (search(ht, "CNE001") != NULL) {
+        printf("ECHEC: CNE001 encore present.\n");
+        correct = 0;
+    }
+    if (search(ht, "CNE005") != NULL) {
+        printf("ECHEC: CNE005 encore present.\n");
+        correct = 0;
+    }
+    if (search(ht, "CNE009") != NULL) {
+        printf("ECHEC: CNE009 encore present.\n");
+        correct = 0;
+    }
+    
+    // Vérifier que les autres sont toujours là
+    if (search(ht, "CNE000") == NULL || search(ht, "CNE002") == NULL) {
+        printf("ECHEC: Des etudiants non supprimes sont manquants.\n");
+        correct = 0;
+    }
+    
+    if (correct) {
+        printf("\nSUCCESS: Les suppressions avec collisions fonctionnent correctement.\n");
+    }
+    
+    // Libérer la mémoire
+    for (int i = 0; i < 10; i++) {
+        free(students[i]);
+    }
+    free_table(ht);
+}
+
+/**
+ * @brief Test de libération de la table de hachage.
+ */
+void test_free_hash_table() {
+    printf("\n\n=== Test de liberation de la table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Insérer plusieurs étudiants
+    student *students[15];
+    for (int i = 0; i < 15; i++) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student("Nom", "Prenom", cne, 10.0 + i);
+        insert_hash(ht, students[i]);
+    }
+    
+    printf("15 etudiants inseres dans la table.\n");
+    
+    // Libérer la table
+    free_table(ht);
+    printf("SUCCESS: Table liberee sans crash.\n");
+    
+    // Test avec NULL
+    free_table(NULL);
+    printf("SUCCESS: Aucun crash avec free_table(NULL).\n");
+    
+    // Libérer les étudiants
+    for (int i = 0; i < 15; i++) {
+        free(students[i]);
+    }
+}
+
+/**
+ * @brief Test de print_table avec différentes situations.
+ */
+void test_print_table() {
+    printf("\n\n=== Test d'affichage de la table de hachage ===\n");
+    
+    // Test avec table vide
+    hash_table *ht = createTable();
+    printf("\nTable vide:\n");
+    print_table(ht);
+    
+    // Ajouter quelques étudiants
+    student *s1 = create_test_student("Alami", "Ahmed", "CNE001", 15.5);
+    student *s2 = create_test_student("Bennani", "Fatima", "CNE002", 16.8);
+    
+    insert_hash(ht, s1);
+    insert_hash(ht, s2);
+    
+    printf("\nTable avec 2 etudiants:\n");
+    print_table(ht);
+    
+    // Test avec NULL
+    printf("\nTest avec table NULL:\n");
+    print_table(NULL);
+    printf("SUCCESS: Aucun crash avec print_table(NULL).\n");
+    
+    free(s1);
+    free(s2);
+    free_table(ht);
+}
+
+/**
+ * @brief Test complet de la table de hachage.
+ */
+void test_hash_table_complete() {
+    printf("\n\n=== Test complet de la table de hachage ===\n");
+    
+    hash_table *ht = createTable();
+    
+    // Phase 1: Insertion
+    printf("\nPhase 1: Insertion de 10 etudiants\n");
+    student *students[10];
+    for (int i = 0; i < 10; i++) {
+        char nom[50], prenom[50], cne[20];
+        sprintf(nom, "Nom%d", i);
+        sprintf(prenom, "Prenom%d", i);
+        sprintf(cne, "CNE%03d", i);
+        students[i] = create_test_student(nom, prenom, cne, 10.0 + i);
+        insert_hash(ht, students[i]);
+    }
+    print_table(ht);
+    
+    // Phase 2: Recherche
+    printf("\n\nPhase 2: Recherche de quelques etudiants\n");
+    for (int i = 0; i < 10; i += 3) {
+        char cne[20];
+        sprintf(cne, "CNE%03d", i);
+        student *found = search(ht, cne);
+        if (found != NULL) {
+            printf("Trouve: %s (Moyenne: %.2f)\n", found->CNE, found->moyenne);
+        }
+    }
+    
+    // Phase 3: Suppression
+    printf("\n\nPhase 3: Suppression de quelques etudiants\n");
+    delete_student_hash(ht, "CNE001");
+    delete_student_hash(ht, "CNE005");
+    delete_student_hash(ht, "CNE008");
+    print_table(ht);
+    
+    // Phase 4: Vérification
+    printf("\n\nPhase 4: Verification\n");
+    int correct = 1;
+    
+    // Vérifier que les étudiants supprimés ne sont plus là
+    if (search(ht, "CNE001") != NULL || 
+        search(ht, "CNE005") != NULL || 
+        search(ht, "CNE008") != NULL) {
+        printf("ECHEC: Des etudiants supprimes sont encore presents.\n");
+        correct = 0;
+    }
+    
+    // Vérifier que les autres sont toujours là
+    if (search(ht, "CNE000") == NULL || 
+        search(ht, "CNE002") == NULL || 
+        search(ht, "CNE009") == NULL) {
+        printf("ECHEC: Des etudiants non supprimes sont manquants.\n");
+        correct = 0;
+    }
+    
+    if (correct) {
+        printf("SUCCESS: Test complet de la table de hachage reussi!\n");
+    } else {
+        printf("ECHEC: Problemes detectes dans le test complet.\n");
+    }
+    
+    // Libérer la mémoire
+    for (int i = 0; i < 10; i++) {
+        free(students[i]);
+    }
+    free_table(ht);
+}
+
+/**
  * @brief Programme principal de test.
  */
 int main() {
@@ -823,6 +1271,19 @@ int main() {
     test_afficher_arbres_trie();
     test_free_bst_nodes();
     test_bst_complete();
+
+    // Tests de la table de hachage
+    printf("\n\n*** TESTS DE LA TABLE DE HACHAGE ***\n");
+    test_create_hash_table();
+    test_hash_function();
+    test_insert_hash();
+    test_search_hash();
+    test_delete_hash();
+    test_hash_collisions();
+    test_delete_with_collisions();
+    test_free_hash_table();
+    test_print_table();
+    test_hash_table_complete();
 
     printf("\n========================================\n");
     printf("   FIN DE TOUS LES TESTS\n");

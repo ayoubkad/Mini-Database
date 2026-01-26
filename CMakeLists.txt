@@ -24,7 +24,9 @@ add_executable(Test_Student
         undo_stack.c
         undo_stack.h
         arbres_binaire.c
-        arbres_binaire.h)
+        arbres_binaire.h
+        hash_table.c
+        hash_table.h)
 
 # Activer CTest
 enable_testing()
