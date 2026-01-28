@@ -1,3 +1,4 @@
+#include "student.h"
 #include "undo_stack.h"
 #include <string.h>
 #include <stdio.h>
@@ -33,7 +34,7 @@ void push_undo(UndoStack *stack, OperationType type, student *s) {
     stack->top = new_node;
 }
 
-void execute_undo(list_student *list, UndoStack *stack) {
+void execute_undo(hash_table *ht, list_student *list, UndoStack *stack) {
     if (stack == NULL || stack->top == NULL) {
         printf("Aucun changement a annuler.\n");
         return;
@@ -41,7 +42,7 @@ void execute_undo(list_student *list, UndoStack *stack) {
     UndoNode *node = stack->top;
     stack->top = node->next;
     switch (node->type) {
-        case ADD_OPERATION: delete_student(list, node->backup_data.CNE, NULL);
+        case ADD_OPERATION: delete_student(ht, list, node->backup_data.CNE, NULL);
             break;
         case DELETE_OPERATION: {
             student *s = (student *) malloc(sizeof(student));
@@ -53,7 +54,7 @@ void execute_undo(list_student *list, UndoStack *stack) {
             s->moyenne = node->backup_data.moyenne;
             s->date_naissance = node->backup_data.date_naissance;
             s->next = NULL;
-            add_student(list, s, NULL);
+            add_student(ht, list, s, NULL);
         }
         break;
         case MODIFY_OPERATION: {

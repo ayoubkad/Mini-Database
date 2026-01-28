@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "student.h"
 #include "hash_table.h"
 
 unsigned int hash(const char *key) {
@@ -23,7 +24,7 @@ hash_table *createTable() {
 void insert_hash(hash_table *ht, student *s) {
     if (ht == NULL || s == NULL) return;
 
-    unsigned int index = hash(s->CNE);
+    const unsigned int index = hash(s->CNE);
 
     node_hash *new_node = (node_hash *) malloc(sizeof(node_hash));
     if (new_node == NULL) {
@@ -42,7 +43,7 @@ void insert_hash(hash_table *ht, student *s) {
     ht->table[index] = new_node;
 }
 
-student *search(hash_table *ht, const char *key) {
+student *search_hash(hash_table *ht, const char *key) {
     if (ht == NULL || key == NULL) {
         return NULL;
     }
@@ -55,8 +56,6 @@ student *search(hash_table *ht, const char *key) {
         }
         temp = temp->next;
     }
-
-    printf("L'étudiant de CNE %s n'existe pas!!!\n", key);
     return NULL;
 }
 
