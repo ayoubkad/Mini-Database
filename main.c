@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "student.h"
+#include "hash_table.h"
 #include "arbres_binaire.h"
 #include "undo_stack.h"
 // #include <windows.h> // pour les Accents
@@ -16,8 +18,16 @@ int main() {
     // SetConsoleOutputCP(65001); // pour les Accents
     list_student *my_db = creat_list_student();
     UndoStack *my_stack = create_undo_stack();
+    hash_table *table_hachage = createTable();
+    
     load_database(my_db, "my_data.db");
+    
+    // Peupler la table de hachage avec les données chargées
+    populate_hash_table(table_hachage, my_db);
+    
     int choice = 0;
+    int sub_choice = 0;
+
     char cne_buffer[15];
 
     do {
@@ -61,7 +71,7 @@ int main() {
                     scanf("%f", &s->moyenne);
                     while (getchar() != '\n');
                 }
-                add_student(my_db, s, my_stack);
+                add_student(table_hachage, my_db, s, my_stack);
                 break;
             }
             case 2:
@@ -71,7 +81,7 @@ int main() {
                 printf("\nEntrez le CNE de l'etudiant a supprimer : ");
                 fgets(cne_buffer, 15, stdin);
                 cne_buffer[strcspn(cne_buffer, "\n")] = 0;
-                delete_student(my_db, cne_buffer, my_stack);
+                delete_student(table_hachage,my_db, cne_buffer, my_stack);
                 break;
             case 4:
                 printf("\nEntrez le CNE de l'etudiant a modifier : ");
@@ -84,7 +94,7 @@ int main() {
                 printf("\nEntrez le CNE de l'etudiant a rechercher : ");
                 fgets(cne_buffer, 15, stdin);
                 cne_buffer[strcspn(cne_buffer, "\n")] = 0;
-                search_student_by_cne(my_db, cne_buffer);
+                search_student_by_cne(table_hachage, cne_buffer);
                 break;
             case 6:
                 // sort_students_by_grade(my_db);
@@ -114,13 +124,12 @@ int main() {
                 scanf("%d", &confirm);
                 while (getchar() != '\n');
                 if (confirm == 1) {
-                    delete_all_students(my_db);
+                    delete_all_students(table_hachage, my_db);
                 } else {
                     printf("Operation annulee.\n");
                 }
                 break;
             case 8:
-                int sub_choice = 0;
                 printf("\n--- MENU HISTORIQUE ---\n");
                 printf("1. Afficher la liste des actions (Voir l'historique)\n");
                 printf("2. Annuler la derniere action (Undo)\n");
@@ -133,7 +142,7 @@ int main() {
                 if (sub_choice == 1) {
                     display_undo_history(my_stack);
                 } else if (sub_choice == 2) {
-                    execute_undo(my_db, my_stack);
+                    execute_undo(table_hachage, my_db, my_stack);
                 } else if (sub_choice == 0) {
                     printf("Retour au menu principal...\n");
                 } else {
@@ -142,6 +151,7 @@ int main() {
                 break;
             case 9:
                 save_database(my_db, "my_data.db");
+                free_table(table_hachage);
                 free_undo_stack(my_stack);
                 printf("Donnees sauvegardees. Au revoir!\n");
                 break;

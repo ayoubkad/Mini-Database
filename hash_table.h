@@ -2,9 +2,9 @@
 #define MINI_DATABASE_HASH_TABLE_H
 
 #define TABLE_SIZE 131
-#include "student.h"
 
-typedef struct node_hash {;
+typedef struct student student;
+typedef struct node_hash {
     char *key;
     student *value;
     struct node_hash *next;
@@ -20,7 +20,7 @@ hash_table *createTable();
 
 void insert_hash(hash_table *ht, student *s);
 
-student *search(hash_table *ht, const char *key);
+student *search_hash(hash_table *ht, const char *key);
 
 void delete_student_hash(hash_table *ht, const char *key);
 

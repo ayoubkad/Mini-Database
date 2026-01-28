@@ -1,6 +1,7 @@
-﻿#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "student.h"
 #include "arbres_binaire.h"
 
 ab_node_student *create_ab_node(student *student) {

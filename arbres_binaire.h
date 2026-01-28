@@ -1,6 +1,7 @@
 #ifndef MINI_DATABASE_ARBRES_BINAIRE_H
 #define MINI_DATABASE_ARBRES_BINAIRE_H
-#include "undo_stack.h"
+
+typedef struct student student;
 
 // structure de node d'arbre
 typedef struct ab_node_student {

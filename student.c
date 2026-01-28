@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "student.h"
+#include "hash_table.h"
 #include "arbres_binaire.h"
 #include "undo_stack.h"
 /**
@@ -42,12 +43,14 @@ student *creat_student() {
 }
 
 /**
- * @brief Ajoute un étudiant à la fin de la liste.
+ * @brief Ajoute un étudiant à la fin de la liste et dans la table de hachage.
  * 
+ * @param ht Pointeur vers la table de hachage.
  * @param list Pointeur vers la liste d'étudiants.
  * @param new_student Pointeur vers l'étudiant à ajouter.
+ * @param stack Pointeur vers la pile d'historique.
  */
-void add_student(list_student *list, student *new_student, UndoStack *stack) {
+void add_student(hash_table *ht, list_student *list, student *new_student, UndoStack *stack) {
     if (list->tete == NULL) {
         list->tete = new_student;
         list->queues = new_student;
@@ -55,6 +58,12 @@ void add_student(list_student *list, student *new_student, UndoStack *stack) {
         list->queues->next = new_student;
         list->queues = new_student;
     }
+    
+    // Ajouter dans la table de hachage
+    if (ht != NULL) {
+        insert_hash(ht, new_student);
+    }
+    
     if (stack != NULL) {
         push_undo(stack, ADD_OPERATION, new_student);
     }
@@ -91,7 +100,7 @@ void display_all_student(list_student *list_student) {
     }
 }
 
-void display_student(list_student *list_student, char *cne) {
+void display_student_cne(list_student *list_student, char *cne) {
     if (list_student == NULL || list_student->tete == NULL) {
         printf("la Base de donnee et vide!!!\n");
     }
@@ -126,8 +135,9 @@ void display_student(list_student *list_student, char *cne) {
  * 
  * @param list Pointeur vers la liste d'étudiants.
  * @param cne_to_delete Chaîne de caractères représentant le CNE de l'étudiant à supprimer.
+ * @param stack Structure de donnee pour stocker historique de suppression
  */
-void delete_student(list_student *list, char *cne_to_delete, UndoStack *stack) {
+void delete_student(hash_table* ht ,list_student *list, char *cne_to_delete, UndoStack *stack) {
     if (list == NULL || list->tete == NULL) {
         printf("La liste est vide ou n'existe pas.\n");
         return;
@@ -170,8 +180,12 @@ void delete_student(list_student *list, char *cne_to_delete, UndoStack *stack) {
         list->queues = previous;
     }
 
-    if (stack = NULL) {
+    if (stack != NULL) {
         push_undo(stack, DELETE_OPERATION, current);
+    }
+
+    if (ht != NULL) {
+        delete_student_hash(ht, cne_to_delete);
     }
 
     free(current);
@@ -301,13 +315,16 @@ void load_database(list_student *list, char *filename) {
         new_student->date_naissance.mois = temp.date_naissance.mois;
         new_student->date_naissance.annee = temp.date_naissance.annee;
 
-        // Réinitialiser le pointeur next (il sera défini correctement par add_student)
-        // Important : le pointeur 'next' du fichier ne serait pas valide ici
+        // Réinitialiser le pointeur next (sera défini correctement manuellement)
         new_student->next = NULL;
 
-        // Ajouter l'étudiant à la fin de la liste chaînée
-        // Cela reconstruit la structure de liste originale
-        add_student(list, new_student, NULL);
+        if (list->tete == NULL) {
+            list->tete = new_student;
+            list->queues = new_student;
+        } else {
+            list->queues->next = new_student;
+            list->queues = new_student;
+        }
     }
 
     fclose(pFile); // Fermer le fichier après la lecture complète
@@ -409,29 +426,42 @@ void modify_student(list_student *list, const char *cne_to_modify, UndoStack *st
     printf("Erreur: Aucun etudiant trouve avec le CNE %s\n", cne_to_modify);
 }
 
-void search_student_by_cne(list_student *list, char *cne) {
-    student *courent = list->tete;
-    while (courent != NULL) {
-        if (strcmp(courent->CNE, cne) == 0) {
-            printf("+--------------------------------------------+\n");
-            printf("|             INFORMATION ETUDIANT           |\n"); // J'ai ajouté %-2d pour l'alignement
-            printf("+--------------------------------------------+\n");
-            printf("| CNE            : %-25.25s |\n", courent->CNE);
-            printf("| Nom            : %-25.25s |\n", courent->nom);
-            printf("| Prenom         : %-25.25s |\n", courent->prenom);
-            printf("| Date Naissance : %02d/%02d/%-19d |\n", courent->date_naissance.jour,
-                   courent->date_naissance.mois, courent->date_naissance.annee);
-            printf("| Filiere        : %-25.25s |\n", courent->filiere);
-            printf("| Moyenne        : %-25.2f |\n", courent->moyenne);
-            printf("+--------------------------------------------+\n");
-            return;
-        }
-        courent = courent->next;
+void search_student_by_cne(hash_table *ht, const char *cne) {
+    if (ht == NULL) {
+        printf("Erreur: Table de hachage non initialisee!\n");
+        return;
     }
-    printf("n'est existe aucun etudiant de CNE : %s dans la base de donnees", cne);
+
+    student *st = search_hash(ht, cne);
+    if (st == NULL) {
+        printf("L'etudiant de CNE %s n'existe pas!!!\n", cne);
+        return;
+    }
+    display_student_arbre(st);
 }
 
-void delete_all_students(list_student *list) {
+/**
+ * @brief Remplit la table de hachage avec tous les étudiants de la liste.
+ * 
+ * @param ht Pointeur vers la table de hachage.
+ * @param list Pointeur vers la liste d'étudiants.
+ */
+void populate_hash_table(hash_table *ht, list_student *list) {
+    if (ht == NULL || list == NULL) {
+        return;
+    }
+    
+    student *current = list->tete;
+    int count = 0;
+    while (current != NULL) {
+        insert_hash(ht, current);
+        count++;
+        current = current->next;
+    }
+    printf("Table de hachage initialisee avec %d etudiant(s).\n", count);
+}
+
+void delete_all_students(hash_table *ht, list_student *list) {
     if (list == NULL || list->tete == NULL) {
         printf("la base de donnee est vide!!!");
         return;
@@ -440,6 +470,12 @@ void delete_all_students(list_student *list) {
     while (courent != NULL) {
         student *temp = courent;
         courent = courent->next;
+        
+        // Supprimer de la table de hachage
+        if (ht != NULL) {
+            delete_student_hash(ht, temp->CNE);
+        }
+        
         free(temp);
     }
     list->tete = NULL;
@@ -448,111 +484,7 @@ void delete_all_students(list_student *list) {
     printf("la base de donnee vide avec success");
 }
 
-/**
- * @brief Trouve le milieu d'une liste chaînée en utilisant la technique du pointeur rapide/lent.
- *
- * @param head Pointeur vers le premier nœud de la liste.
- * @return Pointeur vers le nœud du milieu.
- */
-student *get_middle(student *head) {
-    if (head == NULL) {
-        return NULL;
-    }
-
-    student *slow = head;
-    student *fast = head->next;
-
-    // Le pointeur rapide avance deux fois plus vite que le lent
-    while (fast != NULL && fast->next != NULL) {
-        slow = slow->next;
-        fast = fast->next->next;
-    }
-
-    return slow;
-}
-
-/**
- * @brief Fusionne deux listes chaînées triées en ordre décroissant par moyenne.
- *
- * @param left Pointeur vers le premier nœud de la première liste.
- * @param right Pointeur vers le premier nœud de la deuxième liste.
- * @return Pointeur vers le premier nœud de la liste fusionnée.
- */
-student *merge_sorted_lists(student *left, student *right) {
-    // Si une des listes est vide, retourner l'autre
-    if (left == NULL) return right;
-    if (right == NULL) return left;
-
-    student *result = NULL;
-
-    // Trier par ordre décroissant (meilleures moyennes en premier)
-    if (left->moyenne >= right->moyenne) {
-        result = left;
-        result->next = merge_sorted_lists(left->next, right);
-    } else {
-        result = right;
-        result->next = merge_sorted_lists(left, right->next);
-    }
-    return result;
-}
-
-/**
- * @brief Trie récursivement une liste chaînée par merge sort.
- *
- * @param head Pointeur vers le premier nœud de la liste à trier.
- * @return Pointeur vers le premier nœud de la liste triée.
- */
-student *merge_sort_recursive(student *head) {
-    // Cas de base : liste vide ou un seul élément
-    if (head == NULL || head->next == NULL) {
-        return head;
-    }
-
-    // Trouver le milieu de la liste
-    student *middle = get_middle(head);
-    student *next_of_middle = middle->next;
-
-    // Couper la liste en deux parties
-    middle->next = NULL;
-
-    // Trier récursivement les deux moitiés
-    student *left = merge_sort_recursive(head);
-    student *right = merge_sort_recursive(next_of_middle);
-
-    // Fusionner les deux listes triées
-    student *sorted = merge_sorted_lists(left, right);
-
-    return sorted;
-}
-
-/**
- * @brief Trie les étudiants par moyenne (ordre décroissant).
- *
- * Utilise l'algorithme de tri fusion (merge sort) pour trier la liste
- * des étudiants en fonction de leur moyenne, du plus élevé au plus faible.
- *
- * @param list Pointeur vers la liste d'étudiants à trier.
- */
-void sort_students_by_grade(list_student *list) {
-    if (list == NULL || list->tete == NULL) {
-        printf("La liste est vide, impossible de trier.\n");
-        return;
-    }
-
-    // Appliquer le tri fusion
-    list->tete = merge_sort_recursive(list->tete);
-
-    // Mettre à jour le pointeur de queue
-    student *current = list->tete;
-    while (current != NULL && current->next != NULL) {
-        current = current->next;
-    }
-    list->queues = current;
-
-    printf("Liste triee par moyenne avec succes.\n");
-}
-
-static void display_student_arbre(student *student) {
+void display_student_arbre(student *student) {
     printf("+--------------------------------------------+\n");
     printf("|             INFORMATION ETUDIANT       |\n"); // J'ai ajouté %-2d pour l'alignement
     printf("+--------------------------------------------+\n");
