@@ -130,24 +130,26 @@ int main() {
                 }
                 break;
             case 8:
-                printf("\n--- MENU HISTORIQUE ---\n");
-                printf("1. Afficher la liste des actions (Voir l'historique)\n");
-                printf("2. Annuler la derniere action (Undo)\n");
-                printf("0. Retour au menu principal\n");
-                printf("Votre choix : ");
+                do {
+                    printf("\n--- MENU HISTORIQUE ---\n");
+                    printf("1. Afficher la liste des actions (Voir l'historique)\n");
+                    printf("2. Annuler la derniere action (Undo)\n");
+                    printf("0. Retour au menu principal\n");
+                    printf("Votre choix : ");
 
-                scanf("%d", &sub_choice);
-                while (getchar() != '\n');
+                    scanf("%d", &sub_choice);
+                    while (getchar() != '\n');
 
-                if (sub_choice == 1) {
-                    display_undo_history(my_stack);
-                } else if (sub_choice == 2) {
-                    execute_undo(table_hachage, my_db, my_stack);
-                } else if (sub_choice == 0) {
-                    printf("Retour au menu principal...\n");
-                } else {
-                    printf("Choix invalide !\n");
-                }
+                    if (sub_choice == 1) {
+                        display_undo_history(my_stack);
+                    } else if (sub_choice == 2) {
+                        execute_undo(table_hachage, my_db, my_stack);
+                    } else if (sub_choice == 0) {
+                        printf("Retour au menu principal...\n");
+                    } else {
+                        printf("Choix invalide !\n");
+                    }
+                }while (sub_choice != 0);
                 break;
             case 9:
                 save_database(my_db, "my_data.db");

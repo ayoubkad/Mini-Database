@@ -1,0 +1,1 @@
+/usr/bin/cc  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/Test_Student.dir/test_student.c.o CMakeFiles/Test_Student.dir/student.c.o CMakeFiles/Test_Student.dir/undo_stack.c.o CMakeFiles/Test_Student.dir/arbres_binaire.c.o CMakeFiles/Test_Student.dir/hash_table.c.o -o Test_Student

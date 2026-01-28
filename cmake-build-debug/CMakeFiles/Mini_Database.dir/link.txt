@@ -1,0 +1,1 @@
+/usr/bin/cc  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/Mini_Database.dir/main.c.o CMakeFiles/Mini_Database.dir/student.c.o CMakeFiles/Mini_Database.dir/undo_stack.c.o CMakeFiles/Mini_Database.dir/arbres_binaire.c.o CMakeFiles/Mini_Database.dir/hash_table.c.o -o Mini_Database

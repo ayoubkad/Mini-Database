@@ -1,0 +1,5 @@
+/Users/ayoubkaddioui/CLionProjects/Mini-Database/cmake-build-debug/CMakeFiles/Mini_Database.dir
+/Users/ayoubkaddioui/CLionProjects/Mini-Database/cmake-build-debug/CMakeFiles/Test_Student.dir
+/Users/ayoubkaddioui/CLionProjects/Mini-Database/cmake-build-debug/CMakeFiles/test.dir
+/Users/ayoubkaddioui/CLionProjects/Mini-Database/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/ayoubkaddioui/CLionProjects/Mini-Database/cmake-build-debug/CMakeFiles/rebuild_cache.dir
