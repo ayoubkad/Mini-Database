@@ -8,13 +8,14 @@ A lightweight, high-performance database engine built from scratch in C. This pr
 - **Efficient Data Structures:** 
   - Implements a Singly Linked List with both **Head** and **Tail** pointers for $O(1)$ insertion time.
   - Uses **Binary Search Tree (BST)** for efficient in-order traversal and sorting operations.
+  - Implements **Hash Table** with separate chaining for $O(1)$ average search time by CNE.
 - **Complete CRUD Operations:**
     - **Create:** Add new students dynamically with extended information (name, firstname, birth date, CNE, field of study, average grade).
     - **Read:** Display all registered students with formatted output.
     - **Update:** Modify student information (name, firstname, birth date, field of study, or average grade) by CNE.
     - **Delete:** Remove students by unique ID (CNE) or delete all students at once.
 - **Advanced Search & Sort:**
-    - **Search by CNE:** Quickly find a specific student by their unique identifier.
+    - **Search by CNE:** Lightning-fast search using **Hash Table** for O(1) average lookup time.
     - **Sort by Grade:** Display students sorted by average grade using a **Binary Search Tree (BST)** with in-order traversal for optimal sorting.
 - **Undo/Redo System:** 
     - **Operation History:** Stack-based undo system that tracks all Add, Delete, and Modify operations.
@@ -67,6 +68,21 @@ typedef struct ab_racine_student {
 } ab_racine_student;
 ```
 
+### Hash Table Structure
+```c
+#define TABLE_SIZE 131  // Prime number for better distribution
+
+typedef struct node_hash {
+    char *key;              // CNE as key
+    student *value;         // Pointer to student data
+    struct node_hash *next; // For separate chaining (collision resolution)
+} node_hash;
+
+typedef struct hash_table {
+    node_hash *table[TABLE_SIZE];  // Array of linked lists
+} hash_table;
+```
+
 ### Undo Stack Structure
 ```c
 typedef enum {
@@ -93,6 +109,8 @@ Mini-Database/
 ├── main.c              # Entry point with interactive CLI menu
 ├── student.h           # Student data structures and function declarations
 ├── student.c           # Core implementation (CRUD + File I/O)
+├── hash_table.h        # Hash Table data structure header
+├── hash_table.c        # Hash Table implementation for O(1) search
 ├── arbres_binaire.h    # Binary Search Tree header
 ├── arbres_binaire.c    # BST implementation for sorting
 ├── undo_stack.h        # Undo/Redo system header
@@ -129,7 +147,7 @@ Mini_Database.exe  # Windows
 
 ### Using GCC Directly
 ```bash
-gcc main.c student.c arbres_binaire.c undo_stack.c -o mini_db
+gcc main.c student.c hash_table.c arbres_binaire.c undo_stack.c -o mini_db
 ./mini_db  # Linux/Mac
 mini_db.exe  # Windows
 ```
@@ -191,32 +209,57 @@ Votre choix : 1
 
 | Operation | Time Complexity | Space Complexity |
 |-----------|----------------|------------------|
-| Add Student (end) | O(1) | O(1) |
+| Add Student (end) | O(1) amortized | O(1) |
 | Display All | O(n) | O(1) |
-| Search by CNE | O(n) | O(1) |
-| Update by CNE | O(n) | O(1) |
-| Delete by CNE | O(n) | O(1) |
+| Search by CNE (Hash) | O(1) avg, O(n) worst | O(1) |
+| Update by CNE | O(1) avg with hash | O(1) |
+| Delete by CNE (Hash) | O(1) avg, O(n) worst | O(1) |
 | Delete All Students | O(n) | O(1) |
 | Sort by Grade (BST) | O(n log n) avg, O(n²) worst | O(n) |
 | BST In-Order Traversal | O(n) | O(log n) avg |
+| Hash Table Insert | O(1) avg, O(n) worst | O(1) |
+| Hash Table Lookup | O(1) avg, O(n) worst | O(1) |
 | Load from DB | O(n) | O(n) |
 | Save to DB | O(n) | O(1) |
+| Populate Hash Table | O(n) | O(n) |
 | Push Undo Operation | O(1) | O(1) |
-| Execute Undo | O(n) worst case | O(1) |
+| Execute Undo | O(1) avg with hash | O(1) |
 | Display History | O(h) | O(1) |
 
 **Note:** 
 - The tail pointer optimization ensures constant-time insertion at the end.
+- **Hash Table provides O(1) average search time**, dramatically improving performance for CNE-based operations.
+- Hash collisions are resolved using separate chaining (linked lists).
 - BST performance depends on tree balance; worst case O(n²) occurs with sorted input (degenerates to linked list).
-- Undo stack operations are O(1) for push, but undo execution may require O(n) for deletion/modification searches.
+- Undo stack operations are O(1) for push, and O(1) average for undo execution thanks to hash table integration.
 - History size `h` is the number of operations performed.
+- Hash table uses prime number (131) for better distribution and fewer collisions.
 
 ## 🎯 Key Implementation Details
+
+### Hash Table for Fast Search
+- **Data Structure:** Array of linked lists (separate chaining for collision resolution)
+- **Hash Function:** Uses CNE (unique identifier) as key for hash computation
+- **Table Size:** 131 (prime number to reduce collisions and improve distribution)
+- **Collision Resolution:** Separate chaining with linked lists
+- **Synchronization:** Hash table is automatically synchronized with linked list operations
+- **Automatic Population:** Hash table is populated when database is loaded from disk
+- **Memory Efficient:** Stores pointers to existing student data (no duplication)
+- **Performance Benefits:**
+  - Search by CNE: O(n) → **O(1)** average time
+  - Delete by CNE: O(n) → **O(1)** average time
+  - Undo operations: Significantly faster thanks to hash lookup
+- **Algorithm:**
+  1. Compute hash index: `hash(CNE) % TABLE_SIZE`
+  2. Access bucket at index
+  3. Linear search within bucket (average 1-2 comparisons with good hash function)
+  4. Return student pointer or NULL
 
 ### Binary File Serialization
 - Uses `fwrite()` and `fread()` for efficient binary I/O
 - Data persists between program executions
 - No parsing overhead (unlike text-based formats)
+- Hash table is rebuilt on load for O(1) search performance
 
 ### Binary Search Tree (BST) for Sorting
 - **Dynamic BST construction:** Builds a temporary BST from the linked list for sorting operations
@@ -273,39 +316,19 @@ free(current);                         // Deallocation
 - ✅ Undo on empty history (prevents stack underflow)
 - ✅ BST construction from empty list
 - ✅ Memory cleanup after BST operations
+- ✅ Hash table synchronization during add/delete operations
+- ✅ Hash collision handling with separate chaining
+- ✅ Hash table cleanup on program exit
 
-## 🚧 Future Enhancements
 
-- [ ] **Input Validation:** Prevent duplicate CNEs during student creation
-- [ ] **Search by Name:** Find students without CNE (partial name matching)
-- [ ] **Sort by Name/Date:** Additional sorting options beyond grades
-- [ ] **Balanced BST:** Implement AVL or Red-Black tree for guaranteed O(log n) insertion
-- [ ] **Redo Functionality:** Add redo stack to complement undo operations
-- [ ] **CSV Export:** Export data for spreadsheet applications
-- [ ] **Hash Table:** O(1) search by CNE using hash-based indexing
-- [ ] **Multiple Databases:** Switch between different `.db` files at runtime
-- [ ] **Batch Import:** Load multiple students from CSV/text files
-- [ ] **Statistics:** Display average grade, min/max grades, grade distribution
-- [ ] **Date Validation:** Ensure valid birth dates (leap years, day/month ranges)
-- [ ] **Persistent Undo History:** Save undo stack to disk for recovery after restart
-
-## 🐛 Known Limitations
-
-- No input validation for duplicate CNEs (same CNE can be added multiple times)
-- Fixed-size strings (20 chars for names, 15 for CNE, 30 for filiere)
-- No transaction support (changes are immediate, no rollback except through undo)
-- Single-threaded (no concurrent access)
-- No date validation (can enter invalid dates like 32/13/2025)
-- Binary files are platform-dependent (not portable between different architectures)
-- BST can degenerate to O(n²) if students are added in sorted order by grade
-- Undo history is lost on program exit (not persisted to disk)
-- "Delete All" operation cannot be undone (by design to save memory)
 
 ## 📚 Learning Outcomes
 
 This project demonstrates:
 - ✅ Dynamic memory allocation in C
 - ✅ Pointer manipulation and linked list implementation
+- ✅ **Hash Table implementation with separate chaining**
+- ✅ **Hash function design and collision resolution**
 - ✅ Binary Search Tree (BST) construction and traversal
 - ✅ File I/O operations (binary mode)
 - ✅ Modular programming (separation of concerns)
@@ -315,6 +338,8 @@ This project demonstrates:
 - ✅ Input validation and error handling
 - ✅ Interactive CLI design and user experience
 - ✅ Memory leak prevention and resource cleanup
+- ✅ **Data structure synchronization (Hash Table + Linked List)**
+- ✅ **Performance optimization with hybrid data structures**
 
 **📖 Want to learn more?** Check out [LEARN.md](LEARN.md) for a comprehensive tutorial covering all algorithms, data structures, and implementation details.
 
